@@ -1,11 +1,11 @@
-import React from 'react'; // Importamos React
+import React from 'react'; //Importamos React
 import { View, Text, StyleSheet } from 'react-native'; // Importamos los componentes de react native
 
-const MantenimientoScreen = () => {
+const AjustesScreen = () => {
 return (
-    <View style={styles.container}>
-    <Text>Pantalla de Mantenimiento</Text>
-    </View>
+<View style={styles.container}>
+    <Text>Pantalla de configuración</Text>
+</View>
 );
 };
 
@@ -17,4 +17,4 @@ container: {
 },
 });
 
-export default MantenimientoScreen;
+export default AjustesScreen;

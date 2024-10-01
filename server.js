@@ -1,19 +1,20 @@
+// importamos los modulos necesarios
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
 
 const app = express();
-app.use(cors()); // Habilita CORS para permitir peticiones desde tu app React Native
+app.use(cors()); // Habilitamos CORS para permitir peticiones desde nuestra app React Native
 
 // Configura la conexión a la base de datos
 const db = mysql.createConnection({
-host: 'localhost', // Cambia esto si tu base de datos está en otro lugar
-user: 'root', // Reemplaza con tu usuario de MySQL
-password: 'm7470', // Reemplaza con tu contraseña de MySQL
-database: 'gestion_inventarios', // Reemplaza con el nombre de tu base de datos
+host: 'localhost', // Aca colocamos el lugar donde esta nuestra base de datos
+user: 'root', // Aca colocamos nuestro nombre de usuario
+password: 'm7470', // Aca colocamos la contraseña que tiene nuestra base de datos
+database: 'gestion_inventarios', // Aca colocamos el nombre de nuestra base de datos
 });
 
-// Conectar a la base de datos
+// Esto conectara la base de datos.
 db.connect((err) => {
     if (err) {
         console.error('Error conectando a la base de datos:', err);
@@ -22,7 +23,7 @@ db.connect((err) => {
     console.log('Conectado a la base de datos MySQL');
     });
     
-    // Define tu endpoint
+    // Definimos nuestro enpoint
     app.get('/usuarios', (req, res) => {
     const query = `
         SELECT 
@@ -41,6 +42,6 @@ db.connect((err) => {
     });
     });
     
-    app.listen(4000, () => {
+    app.listen(4000, '0.0.0.0', () => {
     console.log('Servidor corriendo en el puerto 4000');
 });

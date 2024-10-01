@@ -1,10 +1,10 @@
 import React from 'react'; // Importamos React
-import { View, Text, StyleSheet } from 'react-native'; // Importamos componentes de react native
+import { View, Text, StyleSheet } from 'react-native'; // Importamos componentes de ract native
 
-const DispositivosScreen = () => {
+const ReporteScreen = () => {
 return (
 <View style={styles.container}>
-    <Text>Pantalla de Dispositivos</Text>
+    <Text>Pantalla de Marca de Dispositivos</Text>
 </View>
 );
 };
@@ -17,4 +17,4 @@ container: {
 },
 });
 
-export default DispositivosScreen;
+export default ReporteScreen;

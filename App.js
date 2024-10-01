@@ -1,98 +1,24 @@
 import 'react-native-gesture-handler'; // Importamos el handler de gestos
-import React, { useState, useEffect } from 'react'; // Combina ambas importaciones de React
-import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { StyleSheet, Text, View, FlatList } from 'react-native'; // Agrega FlatList aquí
+import React from 'react'; // Importamos React
+import { NavigationContainer } from '@react-navigation/native'; // Importamos el contenedor de navegacion
+import { createDrawerNavigator } from '@react-navigation/drawer'; // Importamos el navegador de menu lateral
 import { MaterialIcons } from '@expo/vector-icons'; // Importamos los iconos
+import InicioScreen from './screens/InicioScreen'; // Importamos la pantalla de inicio
+import UsuariosScreen from './screens/UsuariosScreen'; // Importamos la pantalla de usuarios
+import UnidadScreen from './screens/UnidadScreen'; // Importamos la pantalla de Unidad
+import DispositivosScreen from './screens/DispositivosScreen'; // Importamos la pantalla de dispositivos
+import TipoDispositivosScreen from './screens/TipoDispositivosScreen'; // Importamos la pantalla de tipos de dispositivos
+import MarcaDispositivosScreen from './screens/MarcaDispositivosScreen'; // Importamos la pantalla de marcas de dispositivos
+import MantenimientoScreen from './screens/MantenimientoScreen'; // Importamos la pantalla de mantenimiento
+import ReporteScreen from './screens/ReporteScreen'; // Importamos la pantalla de Reportes
+import AjustesScreen from './screens/AjustesScreen'; // Importamos la pantalla de ajustes
 
-const Drawer = createDrawerNavigator();
+const Drawer = createDrawerNavigator(); // Creamos el navegador de menu lateral
 
-function InicioScreen() {
-  return (
-    <View style={styles.container}>
-      <Text>Pantalla de inicio</Text>
-    </View>
-  );
-}
-
-function UsuariosScreen() {
-  const [usuarios, setUsuarios] = useState([])
-
-  // Aca colocamos nuestra IP local y el puerto correcto donde corre
-  const API_URL ='http://192.168.100.73:4000/usuarios';
-
-  useEffect(() => {
-    // Hacemos la solicitud a la API
-    fetch(API_URL)
-      .then((response) => response.json())
-      .then((data) => {
-        setUsuarios(data); // Guardamos los usuarios en el estado
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
-      });
-  }, []);
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Lista de Usuarios</Text>
-      {/* Mostramos los usuarios en una lista */}
-      <FlatList
-        data={usuarios}
-        keyExtractor={(item) => item.ID_Usuario.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.userContainer}>
-            <Text style={styles.userText}>Nombre: {item.Nombre}</Text>
-            <Text style={styles.userText}>Email: {item.Email}</Text>
-            <Text style={styles.userText}>RUN: {item.RUN}</Text>
-            <Text style={styles.userText}>Unidad: {item.Unidad}</Text>
-          </View>
-        )}
-      />
-    </View>
-  );
-}
-
-function DispositivosScreen() {
-  return (
-    <View style={styles.container}>
-      <Text>Pantalla de Dispositivos</Text>
-    </View>
-  );
-}
-
-function TipoDispositivosScreen() {
-  return (
-    <View style={styles.container}>
-      <Text>Pantalla de Tipo de Dispositivos</Text>
-    </View>
-  );
-}
-
-function MarcaDispositivosScreen() {
-  return (
-    <View style={styles.container}>
-      <Text>Pantalla de Marca de Dispositivos</Text>
-    </View>
-  );
-}
-
-function MantenimientoScreen() {
-  return (
-    <View style={styles.container}>
-      <Text>Pantalla de Mantenimiento</Text>
-    </View>
-  );
-}
-
-function AjustesScreen() {
-  return (
-    <View style={styles.container}>
-      <Text>Pantalla de configuración</Text>
-    </View>
-  );
-}
-
+/**
+ * Componente principal de la aplicación.
+ * Definimos la estructura de navegación de la aplicación utilizando un menú lateral (Drawer).
+ */
 export default function App() {
   return (
     <NavigationContainer>
@@ -125,6 +51,15 @@ export default function App() {
           }} 
         />
         <Drawer.Screen 
+          name="Unidad" 
+          component={UnidadScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <MaterialIcons name="apartment" size={24} color="#4A4A4A" />
+            ),
+          }} 
+        />
+        <Drawer.Screen 
           name="Tipo de Dispositivos" 
           component={TipoDispositivosScreen}
           options={{
@@ -151,7 +86,16 @@ export default function App() {
             ),
           }} 
         />
-      <Drawer.Screen 
+        <Drawer.Screen 
+          name="Reporte" 
+          component={ReporteScreen}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <MaterialIcons name="assessment" size={24} color="#4A4A4A" />
+            ),
+          }} 
+        />
+        <Drawer.Screen 
           name="Ajustes" 
           component={AjustesScreen}
           options={{
@@ -159,27 +103,8 @@ export default function App() {
               <MaterialIcons name="settings" size={24} color="#4A4A4A" />
             ),
           }} 
-          />
-          </Drawer.Navigator>
+        />
+      </Drawer.Navigator>
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  userContainer: {
-    marginBottom: 10,
-  },
-  userText: {
-    fontSize: 16,
-  },
-});
-

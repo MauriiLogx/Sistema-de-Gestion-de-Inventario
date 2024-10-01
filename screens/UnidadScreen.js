@@ -1,10 +1,10 @@
 import React from 'react'; // Importamos React
-import { View, Text, StyleSheet } from 'react-native'; // Importamos los componentes de react native
+import { View, Text, StyleSheet } from 'react-native'; // Importamos componentes de ract native
 
-const MantenimientoScreen = () => {
+const UnidadScreen = () => {
 return (
     <View style={styles.container}>
-    <Text>Pantalla de Mantenimiento</Text>
+    <Text>Pantalla de Unidad</Text>
     </View>
 );
 };
@@ -17,4 +17,4 @@ container: {
 },
 });
 
-export default MantenimientoScreen;
+export default UnidadScreen;
