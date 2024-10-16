@@ -71,7 +71,7 @@ const UsuariosScreen = () => {
                     Alert.alert('Error', 'No se pudo editar el usuario.');
                 });
         } else {
-            // Modo agregar
+            // Fetch para agregar Usuario
             fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -82,7 +82,7 @@ const UsuariosScreen = () => {
                     return response.json();
                 })
                 .then((data) => {
-            // Después de añadir el usuario, hacer un fetch para obtener la lista actualizada
+            // Después de que añadimos el usuario, haremos un fetch para obtener la lista actualizada
             fetch(API_URL)
                 .then((response) => response.json())
                 .then((usuariosActualizados) => {

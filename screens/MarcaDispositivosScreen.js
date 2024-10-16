@@ -61,6 +61,8 @@ const MarcaDispositivosScreen = () => {
                     return response.json();
                 })
                 .then((data) => {
+                    console.log('Respuesta del servidor al agregar marca:', data); // Log de la respuesta
+
                     // Verificamos que 'data' contenga el 'ID_Marca_Dispositivo'
                     if (data && data.ID_Marca_Dispositivo) {
                         const nuevaMarcaConID = {
@@ -121,8 +123,8 @@ const MarcaDispositivosScreen = () => {
 
     const renderHeader = () => (
         <View style={styles.tableHeader}>
-            <Text style={styles.headerText}>Nombre</Text>
-            <Text style={styles.headerText}>Acciones</Text>
+            <Text style={styles.headerTextNombre}>Nombre</Text>
+            <Text style={styles.headerTextAcciones}>Acciones</Text>
         </View>
     );
 
@@ -184,10 +186,17 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 5,
     },
-    headerText: {
+    headerTextNombre: {
         flex: 1,
         fontWeight: 'bold',
+        textAlign: 'left',
     },
+    headerTextAcciones: {
+        flex: 2,
+        fontWeight: 'bold',
+        textAlign: 'right',
+        marginRight: 3,
+    },    
     tableRow: {
         flexDirection: 'row',
         paddingVertical: 10,

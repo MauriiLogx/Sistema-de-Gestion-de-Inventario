@@ -26,6 +26,8 @@ db.connect((err) => {
     console.log('Conectado a la base de datos MySQL'); // Mensaje de éxito en la conexión
 });
 
+// ------------------- Rutas para Usuarios -------------------
+
 // Ruta para obtener los usuarios
 app.get('/api/usuarios', (req, res) => {
     const sql = `
@@ -243,10 +245,92 @@ app.delete('/api/marcas/:id', (req, res) => {
     });
 });
 
-// Inicializar el servidor en el puerto definido
+// ------------------- Rutas para Unidades -------------------
+
+// Ruta para obtener las unidades
+app.get('/api/unidades', (req, res) => {
+    const sql = 'SELECT ID_Unidad, Nombre FROM Unidad';
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error en la consulta SELECT de unidades:', err);
+            return res.status(500).json({ message: 'Error al obtener las unidades' });
+        }
+        res.json(results);
+    });
+});
+
+// Ruta para agregar una nueva unidad
+app.post('/api/unidades', (req, res) => {
+    const { Nombre } = req.body;
+
+    if (!Nombre) {
+        return res.status(400).json({ message: 'El nombre de la unidad es obligatorio' });
+    }
+
+    const insertSql = 'INSERT INTO Unidad (Nombre) VALUES (?)';
+    db.query(insertSql, [Nombre], (err, result) => {
+        if (err) {
+            console.error('Error al agregar la unidad:', err);
+            return res.status(500).json({ message: 'Error al agregar la unidad' });
+        }
+
+        // Obtener el ID de la nueva unidad insertada
+        const newUnidadId = result.insertId;
+
+        // Devolver la nueva unidad incluyendo su ID
+        res.status(201).json({ ID_Unidad: newUnidadId, Nombre });
+    });
+});
+
+// Ruta para editar una unidad
+app.put('/api/unidades/:id', (req, res) => {
+    const { id } = req.params;
+    const { Nombre } = req.body;
+
+    if (!Nombre) {
+        return res.status(400).json({ message: 'El nombre de la unidad es obligatorio' });
+    }
+
+    const updateSql = 'UPDATE Unidad SET Nombre = ? WHERE ID_Unidad = ?';
+    db.query(updateSql, [Nombre, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar la unidad:', err);
+            return res.status(500).json({ message: 'Error al editar la unidad' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Unidad no encontrada' });
+        }
+
+        res.json({ message: 'Unidad actualizada correctamente' });
+    });
+});
+
+// Ruta para eliminar una unidad
+app.delete('/api/unidades/:id', (req, res) => {
+    const { id } = req.params;
+
+    const deleteSql = 'DELETE FROM Unidad WHERE ID_Unidad = ?';
+    db.query(deleteSql, [id], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar la unidad:', err);
+            return res.status(500).json({ message: 'Error al eliminar la unidad' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Unidad no encontrada' });
+        }
+
+        res.json({ message: 'Unidad eliminada correctamente' });
+    });
+});
+
+// ------------------- Arranque del servidor -------------------
 app.listen(port, () => {
     console.log(`Servidor corriendo en el puerto ${port}`);
 });
+
 
 
 
