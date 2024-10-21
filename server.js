@@ -20,13 +20,13 @@ const db = mysql.createConnection({
 // Conexión a la base de datos
 db.connect((err) => {
     if (err) {
-        console.error('Error conectando a la base de datos:', err); // Manejo de errores en la conexión
+        console.error('Error conectando a la base de datos:', err); // Manejo de errores en la conexion
         return;
     }
     console.log('Conectado a la base de datos MySQL'); // Mensaje de éxito en la conexión
 });
 
-// ------------------- Rutas para Usuarios -------------------
+// ------------------- Rutas para usuario -------------------
 
 // Ruta para obtener los usuarios
 app.get('/api/usuarios', (req, res) => {
@@ -45,7 +45,7 @@ app.get('/api/usuarios', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) {
             console.error('Error en la consulta SELECT:', err);
-            return res.status(500).send(err);
+            return res.status(500).json({ message: 'Error al obtener los usuarios' });
         }
         res.json(results);
     });
@@ -83,25 +83,12 @@ app.post('/api/usuarios', (req, res) => {
                 console.error('Error al insertar el usuario:', err);
                 return res.status(500).json({ message: 'Error al agregar el usuario' });
             }
-            res.status(201).json({ message: 'Usuario agregado correctamente' });
+            res.status(201).json({ message: 'Usuario agregado correctamente', usuario: { Nombre, Email, RUN, Unidad } });
         });
     });
 });
 
-// Nueva ruta para obtener las unidades
-app.get('/api/unidades', (req, res) => {
-    const sql = 'SELECT ID_Unidad, Nombre FROM Unidad';
-
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error en la consulta SELECT de unidades:', err);
-            return res.status(500).json({ message: 'Error al obtener las unidades' });
-        }
-        res.json(results);
-    });
-});
-
-// Ruta para editar un usuario
+// Ruta para editar el usuario
 app.put('/api/usuarios/:run', (req, res) => {
     const { run } = req.params;
     const { Nombre, Email, Unidad } = req.body;
@@ -140,12 +127,12 @@ app.put('/api/usuarios/:run', (req, res) => {
                 return res.status(404).json({ message: 'Usuario no encontrado' });
             }
 
-            res.json({ message: 'Usuario actualizado correctamente' });
+            res.json({ message: 'Usuario actualizado correctamente', usuario: { Nombre, Email, RUN: run, Unidad } });
         });
     });
 });
 
-// Ruta para eliminar un usuario
+// Ruta para eliminar el usuario
 app.delete('/api/usuarios/:run', (req, res) => {
     const { run } = req.params;
 
@@ -164,7 +151,7 @@ app.delete('/api/usuarios/:run', (req, res) => {
     });
 });
 
-// ------------------- Rutas para marcas de dispositivos -------------------
+// ------------------- Rutas para Marcas de Dispositivos -------------------
 
 // Ruta para obtener las marcas de dispositivos
 app.get('/api/marcas', (req, res) => {
@@ -194,10 +181,8 @@ app.post('/api/marcas', (req, res) => {
             return res.status(500).json({ message: 'Error al agregar la marca' });
         }
 
-        // Obtener el ID de la nueva marca insertada
         const newMarcaId = result.insertId;
 
-        // Devolver la nueva marca incluyendo su ID
         res.status(201).json({ ID_Marca_Dispositivo: newMarcaId, Nombre });
     });
 });
@@ -222,7 +207,7 @@ app.put('/api/marcas/:id', (req, res) => {
             return res.status(404).json({ message: 'Marca no encontrada' });
         }
 
-        res.json({ message: 'Marca actualizada correctamente' });
+        res.json({ message: 'Marca actualizada correctamente', marca: { ID_Marca_Dispositivo: id, Nombre } });
     });
 });
 
@@ -244,6 +229,7 @@ app.delete('/api/marcas/:id', (req, res) => {
         res.json({ message: 'Marca eliminada correctamente' });
     });
 });
+
 
 // ------------------- Rutas para Unidades -------------------
 
@@ -275,10 +261,8 @@ app.post('/api/unidades', (req, res) => {
             return res.status(500).json({ message: 'Error al agregar la unidad' });
         }
 
-        // Obtener el ID de la nueva unidad insertada
         const newUnidadId = result.insertId;
 
-        // Devolver la nueva unidad incluyendo su ID
         res.status(201).json({ ID_Unidad: newUnidadId, Nombre });
     });
 });
@@ -303,7 +287,7 @@ app.put('/api/unidades/:id', (req, res) => {
             return res.status(404).json({ message: 'Unidad no encontrada' });
         }
 
-        res.json({ message: 'Unidad actualizada correctamente' });
+        res.json({ message: 'Unidad actualizada correctamente', unidad: { ID_Unidad: id, Nombre } });
     });
 });
 
@@ -326,10 +310,91 @@ app.delete('/api/unidades/:id', (req, res) => {
     });
 });
 
-// ------------------- Arranque del servidor -------------------
+// ------------------- Rutas para Tipos de Dispositivos -------------------
+
+// Ruta para obtener los tipos de dispositivos
+app.get('/api/tipos', (req, res) => {
+    const sql = 'SELECT ID_Tipo_Dispositivo, Nombre FROM Tipo_Dispositivo'; // Asegúrate de que el nombre de la tabla y los campos sean correctos.
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error en la consulta SELECT de tipos de dispositivos:', err);
+            return res.status(500).json({ message: 'Error al obtener los tipos de dispositivos' });
+        }
+        res.json(results);
+    });
+});
+
+// Ruta para agregar un nuevo tipo de dispositivo
+app.post('/api/tipos', (req, res) => {
+    const { Nombre } = req.body;
+
+    if (!Nombre) {
+        return res.status(400).json({ message: 'El nombre del tipo de dispositivo es obligatorio' });
+    }
+
+    const insertSql = 'INSERT INTO Tipo_Dispositivo (Nombre) VALUES (?)';
+    db.query(insertSql, [Nombre], (err, result) => {
+        if (err) {
+            console.error('Error al agregar el tipo de dispositivo:', err);
+            return res.status(500).json({ message: 'Error al agregar el tipo de dispositivo' });
+        }
+
+        const newTipoId = result.insertId;
+
+        res.status(201).json({ ID_Tipo_Dispositivo: newTipoId, Nombre });
+    });
+});
+
+// Ruta para editar un tipo de dispositivo
+app.put('/api/tipos/:id', (req, res) => {
+    const { id } = req.params;
+    const { Nombre } = req.body;
+
+    if (!Nombre) {
+        return res.status(400).json({ message: 'El nombre del tipo de dispositivo es obligatorio' });
+    }
+
+    const updateSql = 'UPDATE Tipo_Dispositivo SET Nombre = ? WHERE ID_Tipo_Dispositivo = ?';
+    db.query(updateSql, [Nombre, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el tipo de dispositivo:', err);
+            return res.status(500).json({ message: 'Error al editar el tipo de dispositivo' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Tipo de dispositivo no encontrado' });
+        }
+
+        res.json({ message: 'Tipo de dispositivo actualizado correctamente', tipo: { ID_Tipo_Dispositivo: id, Nombre } });
+    });
+});
+
+// Ruta para eliminar un tipo de dispositivo
+app.delete('/api/tipos/:id', (req, res) => {
+    const { id } = req.params;
+
+    const deleteSql = 'DELETE FROM Tipo_Dispositivo WHERE ID_Tipo_Dispositivo = ?';
+    db.query(deleteSql, [id], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar el tipo de dispositivo:', err);
+            return res.status(500).json({ message: 'Error al eliminar el tipo de dispositivo' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Tipo de dispositivo no encontrado' });
+        }
+
+        res.json({ message: 'Tipo de dispositivo eliminado correctamente' });
+    });
+});
+
+
+// ------------------- Iniciar el servidor -------------------
 app.listen(port, () => {
     console.log(`Servidor corriendo en el puerto ${port}`);
 });
+
 
 
 

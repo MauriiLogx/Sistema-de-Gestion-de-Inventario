@@ -12,7 +12,7 @@ const UsuariosScreen = () => {
     const [unidad, setUnidad] = useState('');
     const [unidades, setUnidades] = useState([]);
     const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
-    const API_URL = 'http://192.168.100.53:4000/api/usuarios';
+    const API_URL = 'http://192.168.100.51:4000/api/usuarios';
 
     useEffect(() => {
         fetch(API_URL)
@@ -21,7 +21,7 @@ const UsuariosScreen = () => {
             .catch((error) => console.error('Error fetching data:', error));
 
         // Fetch para obtener las unidades
-        fetch('http://192.168.100.53:4000/api/unidades')
+        fetch('http://192.168.100.51:4000/api/unidades')
             .then((response) => response.json())
             .then((data) => setUnidades(data))
             .catch((error) => console.error('Error fetching unidades:', error));

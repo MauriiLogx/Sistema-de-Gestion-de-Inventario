@@ -6,7 +6,7 @@ const MarcaDispositivosScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [nombre, setNombre] = useState('');
     const [marcaSeleccionada, setMarcaSeleccionada] = useState(null);
-    const API_URL = 'http://192.168.100.53:4000/api/marcas'; // Reemplaza con tu URL de la API
+    const API_URL = 'http://192.168.100.51:4000/api/marcas'; // Reemplaza con tu URL de la API
 
     // Obtener las marcas de dispositivos desde la API
     useEffect(() => {

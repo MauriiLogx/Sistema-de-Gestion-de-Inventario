@@ -6,7 +6,7 @@ const UnidadScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [nombreUnidad, setNombreUnidad] = useState('');
     const [unidadSeleccionada, setUnidadSeleccionada] = useState(null);
-    const API_URL = 'http://192.168.100.53:4000/api/unidades'; // Reemplaza con tu URL de la API
+    const API_URL = 'http://192.168.100.51:4000/api/unidades'; // Asegúrate de que esta URL sea correcta y accesible
 
     // Obtener las unidades desde la API
     useEffect(() => {
@@ -120,8 +120,8 @@ const UnidadScreen = () => {
 
     const renderHeader = () => (
         <View style={styles.tableHeader}>
-            <Text style={styles.headerText}>Nombre</Text>
-            <Text style={styles.headerText}>Acciones</Text>
+            <Text style={styles.headerTextNombre}>Nombre</Text>
+            <Text style={styles.headerTextAcciones}>Acciones</Text>
         </View>
     );
 
@@ -167,35 +167,37 @@ const UnidadScreen = () => {
     );
 };
 
-export default UnidadScreen;
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: 16,
     },
     title: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    listContainer: {
-        paddingBottom: 20,
-    },
     tableHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        backgroundColor: '#f4f4f4',
         paddingVertical: 10,
-        backgroundColor: '#f1f1f1',
+        paddingHorizontal: 5,
     },
-    headerText: {
+    headerTextNombre: {
+        flex: 1,
         fontWeight: 'bold',
-        fontSize: 16,
+        textAlign: 'left',
     },
+    headerTextAcciones: {
+        flex: 2,
+        fontWeight: 'bold',
+        textAlign: 'right',
+        marginRight: 3,
+    },    
     tableRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         paddingVertical: 10,
+        paddingHorizontal: 5,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
     },
@@ -221,11 +223,10 @@ const styles = StyleSheet.create({
     deleteButtonText: {
         color: 'white',
     },
-    modalView: {
-        backgroundColor: 'white',
+    modalContent: {
+        flex: 1,
+        justifyContent: 'center',
         padding: 20,
-        margin: 20,
-        borderRadius: 10,
     },
     modalTitle: {
         fontSize: 18,
@@ -239,3 +240,6 @@ const styles = StyleSheet.create({
         padding: 5,
     },
 });
+
+export default UnidadScreen;
+

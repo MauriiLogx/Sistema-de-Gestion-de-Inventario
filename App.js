@@ -15,10 +15,6 @@ import AjustesScreen from './screens/AjustesScreen'; // Importamos la pantalla d
 
 const Drawer = createDrawerNavigator(); // Creamos el navegador de menu lateral
 
-/**
- * Componente principal de la aplicación.
- * Definimos la estructura de navegación de la aplicación utilizando un menú lateral (Drawer).
- */
 export default function App() {
   return (
     <NavigationContainer>
