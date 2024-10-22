@@ -6,15 +6,32 @@ const MarcaDispositivosScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [nombre, setNombre] = useState('');
     const [marcaSeleccionada, setMarcaSeleccionada] = useState(null);
+    const [searchText, setSearchText] = useState(''); // Estado para la barra de búsqueda
+    const [filteredMarcas, setFilteredMarcas] = useState([]); // Estado para las marcas filtradas
     const API_URL = 'http://192.168.100.51:4000/api/marcas'; // Reemplaza con tu URL de la API
 
     // Obtener las marcas de dispositivos desde la API
     useEffect(() => {
         fetch(API_URL)
             .then((response) => response.json())
-            .then((data) => setMarcas(data))
+            .then((data) => {
+                setMarcas(data);
+                setFilteredMarcas(data); // Inicialmente, las marcas filtradas son todas las marcas
+            })
             .catch((error) => console.error('Error fetching data:', error));
     }, []);
+
+    // Filtrar marcas en base al texto de búsqueda
+    useEffect(() => {
+        if (searchText === '') {
+            setFilteredMarcas(marcas);
+        } else {
+            const filtered = marcas.filter((marca) =>
+                marca.Nombre.toLowerCase().includes(searchText.toLowerCase())
+            );
+            setFilteredMarcas(filtered);
+        }
+    }, [searchText, marcas]);
 
     // Manejar la edición o agregar una nueva marca
     const manejarMarca = () => {
@@ -61,13 +78,12 @@ const MarcaDispositivosScreen = () => {
                     return response.json();
                 })
                 .then((data) => {
-                    console.log('Respuesta del servidor al agregar marca:', data); // Log de la respuesta
+                    console.log('Respuesta del servidor al agregar marca:', data);
 
-                    // Verificamos que 'data' contenga el 'ID_Marca_Dispositivo'
                     if (data && data.ID_Marca_Dispositivo) {
                         const nuevaMarcaConID = {
-                            ID_Marca_Dispositivo: data.ID_Marca_Dispositivo, // Asumiendo que el backend devuelve el ID
-                            Nombre: data.Nombre, // Verificar si el backend devuelve correctamente el 'Nombre'
+                            ID_Marca_Dispositivo: data.ID_Marca_Dispositivo,
+                            Nombre: data.Nombre,
                         };
                         setMarcas([...marcas, nuevaMarcaConID]);
                         cerrarModal();
@@ -145,8 +161,17 @@ const MarcaDispositivosScreen = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Lista de Marcas de Dispositivos</Text>
+
+            {/* Barra de búsqueda */}
+            <TextInput
+                style={styles.searchBar}
+                placeholder="Buscar marca..."
+                value={searchText}
+                onChangeText={setSearchText}
+            />
+
             <FlatList
-                data={marcas}
+                data={filteredMarcas} // Usamos las marcas filtradas
                 keyExtractor={(item) => item.ID_Marca_Dispositivo.toString()}
                 ListHeaderComponent={renderHeader}
                 renderItem={renderItem}
@@ -178,6 +203,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    searchBar: {
+        height: 40,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        borderWidth: 1,
+        paddingLeft: 8,
         marginBottom: 10,
     },
     tableHeader: {
@@ -246,5 +279,6 @@ const styles = StyleSheet.create({
 });
 
 export default MarcaDispositivosScreen;
+
 
 

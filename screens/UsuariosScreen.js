@@ -1,3 +1,4 @@
+// Ya documentado
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
