@@ -13,7 +13,7 @@ const UnidadScreen = () => {
         fetch(API_URL)
             .then((response) => response.json())
             .then((data) => setUnidades(data))
-            .catch((error) => console.error('Error fetching data:', error));
+            .catch((error) => console.error('Error fetching data unidadess:', error));
     }, []);
 
     // Manejar la edición o agregar una nueva unidad

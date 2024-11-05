@@ -16,7 +16,7 @@ const MarcaDispositivosScreen = () => {
             .then((response) => response.json())
             .then((data) => {
                 setMarcas(data);
-                setFilteredMarcas(data); // Inicialmente, las marcas filtradas son todas las marcas
+                setFilteredMarcas(data);
             })
             .catch((error) => console.error('Error fetching data:', error));
     }, []);

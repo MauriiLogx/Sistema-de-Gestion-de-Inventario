@@ -19,7 +19,7 @@ const UsuariosScreen = () => {
         fetch(API_URL)
             .then((response) => response.json())
             .then((data) => setUsuarios(data))
-            .catch((error) => console.error('Error fetching data:', error));
+            .catch((error) => console.error('Error fetching usuarios:', error));
 
         // Fetch para obtener las unidades
         fetch('http://192.168.100.51:4000/api/unidades')

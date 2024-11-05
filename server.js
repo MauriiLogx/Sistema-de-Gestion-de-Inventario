@@ -151,6 +151,86 @@ app.delete('/api/usuarios/:run', (req, res) => {
     });
 });
 
+// ------------------- Tipo de Dispositivos --------------------------------
+
+// Ruta para obtener los tipos de dispositivos
+app.get('/api/tipos', (req, res) => {
+    const sql = 'SELECT ID_Tipo_Dispositivo, Nombre FROM tipo_dispositivo';
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error en la consulta SELECT de tipos de dispositivos:', err);
+            return res.status(500).json({ message: 'Error al obtener los tipos de dispositivos' });
+        }
+        res.json(results);
+    });
+});
+
+// Ruta para agregar un nuevo tipo de dispositivo
+app.post('/api/tipos', (req, res) => {
+    const { Nombre } = req.body;
+
+    if (!Nombre) {
+        return res.status(400).json({ message: 'El nombre del tipo de dispositivo es obligatorio' });
+    }
+
+    const insertSql = 'INSERT INTO tipo_dispositivo (Nombre) VALUES (?)';
+    db.query(insertSql, [Nombre], (err, result) => {
+        if (err) {
+            console.error('Error al agregar el tipo de dispositivo:', err);
+            return res.status(500).json({ message: 'Error al agregar el tipo de dispositivo' });
+        }
+
+        const newTipoId = result.insertId;
+
+        res.status(201).json({ ID_Tipo_Dispositivo: newTipoId, Nombre });
+    });
+});
+
+// Ruta para editar un tipo de dispositivo
+app.put('/api/tipos/:id', (req, res) => {
+    const { id } = req.params;
+    const { Nombre } = req.body;
+
+    if (!Nombre) {
+        return res.status(400).json({ message: 'El nombre del tipo de dispositivo es obligatorio' });
+    }
+
+    const updateSql = 'UPDATE tipo_dispositivo SET Nombre = ? WHERE ID_Tipo_Dispositivo = ?';
+    db.query(updateSql, [Nombre, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el tipo de dispositivo:', err);
+            return res.status(500).json({ message: 'Error al editar el tipo de dispositivo' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Tipo de dispositivo no encontrado' });
+        }
+
+        res.json({ message: 'Tipo de dispositivo actualizado correctamente', tipo: { ID_Tipo_Dispositivo: id, Nombre } });
+    });
+});
+
+// Ruta para eliminar un tipo de dispositivo
+app.delete('/api/tipos/:id', (req, res) => {
+    const { id } = req.params;
+
+    const deleteSql = 'DELETE FROM tipo_dispositivo WHERE ID_Tipo_Dispositivo = ?';
+    db.query(deleteSql, [id], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar el tipo de dispositivo:', err);
+            return res.status(500).json({ message: 'Error al eliminar el tipo de dispositivo' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Tipo de dispositivo no encontrado' });
+        }
+
+        res.json({ message: 'Tipo de dispositivo eliminado correctamente' });
+    });
+});
+
+
 // ------------------- Rutas para Marcas de Dispositivos -------------------
 
 // Ruta para obtener las marcas de dispositivos
@@ -310,82 +390,218 @@ app.delete('/api/unidades/:id', (req, res) => {
     });
 });
 
-// ------------------- Rutas para Tipos de Dispositivos -------------------
+// --------------------- Rutas para dispositivos ---------------------------
 
-// Ruta para obtener los tipos de dispositivos
-app.get('/api/tipos', (req, res) => {
-    const sql = 'SELECT ID_Tipo_Dispositivo, Nombre FROM Tipo_Dispositivo'; // Asegúrate de que el nombre de la tabla y los campos sean correctos.
+// Ruta para obtener los dispositivos
+app.get('/api/dispositivos', (req, res) => {
+    const sql = `
+        SELECT 
+            d.Numero_Serie, 
+            m.Nombre AS Marca, 
+            d.Modelo, 
+            u.Nombre AS Usuario 
+        FROM 
+            Dispositivo d
+            LEFT JOIN Marca_Dispositivo m ON d.Marca_Dispositivo_ID = m.ID_Marca_Dispositivo
+            LEFT JOIN Usuario u ON d.Usuario_ID = u.ID_Usuario
+    `;
 
     db.query(sql, (err, results) => {
         if (err) {
-            console.error('Error en la consulta SELECT de tipos de dispositivos:', err);
-            return res.status(500).json({ message: 'Error al obtener los tipos de dispositivos' });
+            console.error('Error en la consulta SELECT de dispositivos:', err);
+            return res.status(500).json({ message: 'Error al obtener los dispositivos' });
         }
         res.json(results);
     });
 });
 
-// Ruta para agregar un nuevo tipo de dispositivo
-app.post('/api/tipos', (req, res) => {
-    const { Nombre } = req.body;
+// Ruta para agregar un nuevo dispositivo
+app.post('/api/dispositivos', (req, res) => {
+    const { Numero_Serie, Modelo, Sistema_Operativo, Usuario_RUN, Marca_Dispositivo_ID, Tipo_Dispositivo_ID, Estado, Fecha_Recepcion, Fecha_Baja } = req.body;
 
-    if (!Nombre) {
-        return res.status(400).json({ message: 'El nombre del tipo de dispositivo es obligatorio' });
+    console.log('Datos recibidos en la solicitud POST:', {
+        Numero_Serie,
+        Modelo,
+        Sistema_Operativo,
+        Usuario_RUN,
+        Marca_Dispositivo_ID,
+        Tipo_Dispositivo_ID,
+        Estado,
+        Fecha_Recepcion,
+        Fecha_Baja
+    });
+
+    if (
+        !Numero_Serie || 
+        !Modelo || 
+        !Sistema_Operativo || 
+        !Usuario_RUN || 
+        !Marca_Dispositivo_ID || 
+        !Tipo_Dispositivo_ID || 
+        !Estado || 
+        !Fecha_Recepcion 
+    ) {
+        console.error('Error de validación - Faltan campos básicos en la solicitud POST:', req.body);
+        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    const insertSql = 'INSERT INTO Tipo_Dispositivo (Nombre) VALUES (?)';
-    db.query(insertSql, [Nombre], (err, result) => {
+    if (Estado.toLowerCase() !== 'activo' && !Fecha_Baja) {
+        console.error('Error de validación - Fecha_Baja es obligatoria cuando el estado no es activo:', {
+            Estado,
+            Fecha_Baja
+        });
+        return res.status(400).json({ message: 'Fecha de baja es obligatoria cuando el estado no es activo' });
+    }
+
+    const getUserIDSql = 'SELECT ID_Usuario FROM Usuario WHERE RUN = ?';
+
+    db.query(getUserIDSql, [Usuario_RUN], (err, userResult) => {
         if (err) {
-            console.error('Error al agregar el tipo de dispositivo:', err);
-            return res.status(500).json({ message: 'Error al agregar el tipo de dispositivo' });
+            console.error('Error al obtener el ID del usuario:', err);
+            return res.status(500).json({ message: 'Error al buscar el usuario' });
         }
 
-        const newTipoId = result.insertId;
+        if (userResult.length === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
 
-        res.status(201).json({ ID_Tipo_Dispositivo: newTipoId, Nombre });
+        const Usuario_ID = userResult[0].ID_Usuario;
+
+        const sql = `
+            INSERT INTO Dispositivo 
+                (Numero_Serie, Modelo, Sistema_Operativo, Usuario_ID, Marca_Dispositivo_ID, Tipo_Dispositivo_ID, Estado, Fecha_Recepcion, Fecha_Baja) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.query(sql, [
+            Numero_Serie,        
+            Modelo,              
+            Sistema_Operativo,   
+            Usuario_ID,          
+            Marca_Dispositivo_ID,
+            Tipo_Dispositivo_ID, 
+            Estado,              
+            Fecha_Recepcion,     
+            Estado.toLowerCase() === 'activo' ? null : Fecha_Baja // Ajuste para insertar null si el estado es activo
+        ], (err, result) => {
+            if (err) {
+                console.error('Error al insertar el dispositivo:', err);
+                return res.status(500).json({ message: 'Error al agregar el dispositivo' });
+            }
+
+            res.status(201).json({ message: 'Dispositivo agregado correctamente', dispositivo: { Numero_Serie, Modelo, Sistema_Operativo, Usuario_ID, Marca_Dispositivo_ID, Tipo_Dispositivo_ID, Estado, Fecha_Recepcion, Fecha_Baja } });
+        });
     });
 });
 
-// Ruta para editar un tipo de dispositivo
-app.put('/api/tipos/:id', (req, res) => {
-    const { id } = req.params;
-    const { Nombre } = req.body;
+// Ruta para editar un dispositivo existente
+app.put('/api/dispositivos/:numeroSerie', (req, res) => {
+    const { numeroSerie } = req.params;
+    const { Modelo, Sistema_Operativo, Usuario_RUN, Marca_Dispositivo_ID, Tipo_Dispositivo_ID, Estado, Fecha_Recepcion, Fecha_Baja } = req.body;
 
-    if (!Nombre) {
-        return res.status(400).json({ message: 'El nombre del tipo de dispositivo es obligatorio' });
+    // Validar que todos los campos requeridos estén presentes
+    if (!Modelo || !Sistema_Operativo || !Usuario_RUN || !Marca_Dispositivo_ID || !Tipo_Dispositivo_ID || !Estado || !Fecha_Recepcion) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    const updateSql = 'UPDATE Tipo_Dispositivo SET Nombre = ? WHERE ID_Tipo_Dispositivo = ?';
-    db.query(updateSql, [Nombre, id], (err, result) => {
+    // Validación adicional para Fecha_Baja
+    if (Estado.toLowerCase() !== 'activo' && !Fecha_Baja) {
+        return res.status(400).json({ message: 'Fecha de baja es obligatoria cuando el estado no es activo' });
+    }
+
+    // Obtener el ID del usuario a partir del RUN
+    const getUserIDSql = 'SELECT ID_Usuario FROM Usuario WHERE RUN = ?';
+    db.query(getUserIDSql, [Usuario_RUN], (err, userResult) => {
         if (err) {
-            console.error('Error al actualizar el tipo de dispositivo:', err);
-            return res.status(500).json({ message: 'Error al editar el tipo de dispositivo' });
+            console.error('Error al obtener el ID del usuario:', err);
+            return res.status(500).json({ message: 'Error al buscar el usuario' });
         }
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Tipo de dispositivo no encontrado' });
+        if (userResult.length === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
-        res.json({ message: 'Tipo de dispositivo actualizado correctamente', tipo: { ID_Tipo_Dispositivo: id, Nombre } });
+        const Usuario_ID = userResult[0].ID_Usuario;
+
+        // Preparar la consulta de actualización
+        const updateSql = `
+            UPDATE Dispositivo
+            SET Marca_Dispositivo_ID = ?, Modelo = ?, Usuario_ID = ?, Tipo_Dispositivo_ID = ?, Estado = ?, Fecha_Recepcion = ?, Fecha_Baja = ?, Sistema_Operativo = ?
+            WHERE Numero_Serie = ?
+        `;
+
+        db.query(updateSql, [
+            Marca_Dispositivo_ID,
+            Modelo,
+            Usuario_ID,
+            Tipo_Dispositivo_ID,
+            Estado,
+            Fecha_Recepcion,
+            Estado.toLowerCase() === 'activo' ? null : Fecha_Baja,
+            Sistema_Operativo,
+            numeroSerie
+        ], (err, result) => {
+            if (err) {
+                console.error('Error al actualizar el dispositivo:', err);
+                return res.status(500).json({ message: 'Error al editar el dispositivo' });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Dispositivo no encontrado' });
+            }
+
+            res.json({ message: 'Dispositivo actualizado correctamente' });
+        });
     });
 });
 
-// Ruta para eliminar un tipo de dispositivo
-app.delete('/api/tipos/:id', (req, res) => {
-    const { id } = req.params;
 
-    const deleteSql = 'DELETE FROM Tipo_Dispositivo WHERE ID_Tipo_Dispositivo = ?';
-    db.query(deleteSql, [id], (err, result) => {
+// Ruta para obtener los datos de un dispositivo específico por número de serie
+app.get('/api/dispositivos/:numeroSerie', (req, res) => {
+    const { numeroSerie } = req.params;
+
+    const querySql = `
+        SELECT d.Numero_Serie, d.Modelo, d.Sistema_Operativo, d.Estado, d.Fecha_Recepcion, d.Fecha_Baja,
+        u.RUN AS Usuario_RUN, m.ID_Marca_Dispositivo AS Marca_Dispositivo_ID, t.ID_Tipo_Dispositivo AS Tipo_Dispositivo_ID
+        FROM Dispositivo d
+        JOIN Usuario u ON d.Usuario_ID = u.ID_Usuario
+        JOIN Marca_Dispositivo m ON d.Marca_Dispositivo_ID = m.ID_Marca_Dispositivo
+        JOIN Tipo_Dispositivo t ON d.Tipo_Dispositivo_ID = t.ID_Tipo_Dispositivo
+        WHERE d.Numero_Serie = ?
+    `;
+
+    db.query(querySql, [numeroSerie], (err, result) => {
         if (err) {
-            console.error('Error al eliminar el tipo de dispositivo:', err);
-            return res.status(500).json({ message: 'Error al eliminar el tipo de dispositivo' });
+            console.error('Error al obtener datos del dispositivo:', err);
+            return res.status(500).json({ message: 'Error al obtener el dispositivo' });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Dispositivo no encontrado' });
+        }
+
+        console.log('Datos del dispositivo obtenidos:', result[0]); // Para depuración
+        res.json(result[0]);
+    });
+});
+
+
+// Ruta para eliminar el dispositivo
+app.delete('/api/dispositivos/:numeroSerie', (req, res) => {
+    const { numeroSerie } = req.params;
+
+    const sql = `DELETE FROM Dispositivo WHERE Numero_Serie = ?`;
+    db.query(sql, [numeroSerie], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar el dispositivo:', err);
+            return res.status(500).json({ message: 'Error al eliminar el dispositivo' });
         }
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Tipo de dispositivo no encontrado' });
+            return res.status(404).json({ message: 'Dispositivo no encontrado' });
         }
 
-        res.json({ message: 'Tipo de dispositivo eliminado correctamente' });
+        res.json({ message: 'Dispositivo eliminado correctamente' });
     });
 });
 

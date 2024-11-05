@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 
-const TipoDispositivosScreen = () => {
-    const [tiposDispositivo, setTiposDispositivo] = useState([]);
+const TipoDispositivoScreen = () => {
+    const [tipos, setTipos] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [nombre, setNombre] = useState('');
     const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
@@ -12,13 +12,13 @@ const TipoDispositivosScreen = () => {
     useEffect(() => {
         fetch(API_URL)
             .then((response) => response.json())
-            .then((data) => setTiposDispositivo(data))
+            .then((data) => setTipos(data))
             .catch((error) => console.error('Error fetching data:', error));
     }, []);
 
     // Manejar la edición o agregar un nuevo tipo de dispositivo
-    const manejarTipoDispositivo = () => {
-        const nuevoTipoDispositivo = {
+    const manejarTipo = () => {
+        const nuevoTipo = {
             Nombre: nombre,
         };
 
@@ -32,17 +32,17 @@ const TipoDispositivosScreen = () => {
             fetch(`${API_URL}/${tipoSeleccionado.ID_Tipo_Dispositivo}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoTipoDispositivo),
+                body: JSON.stringify(nuevoTipo),
             })
                 .then((response) => {
                     if (!response.ok) throw new Error('Error en la respuesta del servidor');
                     return response.json();
                 })
                 .then(() => {
-                    const tiposActualizados = tiposDispositivo.map((tipo) =>
-                        tipo.ID_Tipo_Dispositivo === tipoSeleccionado.ID_Tipo_Dispositivo ? { ...tipo, ...nuevoTipoDispositivo } : tipo
+                    const tiposActualizados = tipos.map((tipo) =>
+                        tipo.ID_Tipo_Dispositivo === tipoSeleccionado.ID_Tipo_Dispositivo ? { ...tipo, ...nuevoTipo } : tipo
                     );
-                    setTiposDispositivo(tiposActualizados);
+                    setTipos(tiposActualizados);
                     cerrarModal();
                 })
                 .catch((error) => {
@@ -54,19 +54,22 @@ const TipoDispositivosScreen = () => {
             fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoTipoDispositivo),
+                body: JSON.stringify(nuevoTipo),
             })
                 .then((response) => {
                     if (!response.ok) throw new Error('Error en la respuesta del servidor');
                     return response.json();
                 })
                 .then((data) => {
+                    console.log('Respuesta del servidor al agregar tipo de dispositivo:', data);
+
+                    // Verificamos que 'data' contenga el 'ID_Tipo_Dispositivo'
                     if (data && data.ID_Tipo_Dispositivo) {
                         const nuevoTipoConID = {
                             ID_Tipo_Dispositivo: data.ID_Tipo_Dispositivo,
                             Nombre: data.Nombre,
                         };
-                        setTiposDispositivo([...tiposDispositivo, nuevoTipoConID]);
+                        setTipos([...tipos, nuevoTipoConID]);
                         cerrarModal();
                     } else {
                         throw new Error('La respuesta no contiene un ID válido');
@@ -79,13 +82,13 @@ const TipoDispositivosScreen = () => {
         }
     };
 
-    const editarTipoDispositivo = (tipo) => {
+    const editarTipo = (tipo) => {
         setTipoSeleccionado(tipo);
         setNombre(tipo.Nombre);
         setModalVisible(true);
     };
 
-    const eliminarTipoDispositivo = (id) => {
+    const eliminarTipo = (id) => {
         Alert.alert(
             'Eliminar Tipo de Dispositivo',
             '¿Estás seguro de que deseas eliminar este tipo de dispositivo?',
@@ -100,7 +103,7 @@ const TipoDispositivosScreen = () => {
                         fetch(`${API_URL}/${id}`, { method: 'DELETE' })
                             .then((response) => {
                                 if (!response.ok) throw new Error('Error al eliminar el tipo de dispositivo');
-                                setTiposDispositivo(tiposDispositivo.filter((tipo) => tipo.ID_Tipo_Dispositivo !== id));
+                                setTipos(tipos.filter((tipo) => tipo.ID_Tipo_Dispositivo !== id));
                             })
                             .catch((error) => {
                                 console.error('Error al eliminar tipo de dispositivo:', error);
@@ -129,10 +132,10 @@ const TipoDispositivosScreen = () => {
         <View style={styles.tableRow}>
             <Text style={styles.cellText}>{item.Nombre}</Text>
             <View style={styles.cellActions}>
-                <TouchableOpacity style={styles.editButton} onPress={() => editarTipoDispositivo(item)}>
+                <TouchableOpacity style={styles.editButton} onPress={() => editarTipo(item)}>
                     <Text style={styles.editButtonText}>Editar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarTipoDispositivo(item.ID_Tipo_Dispositivo)}>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarTipo(item.ID_Tipo_Dispositivo)}>
                     <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
             </View>
@@ -143,7 +146,7 @@ const TipoDispositivosScreen = () => {
         <View style={styles.container}>
             <Text style={styles.title}>Lista de Tipos de Dispositivos</Text>
             <FlatList
-                data={tiposDispositivo}
+                data={tipos}
                 keyExtractor={(item) => item.ID_Tipo_Dispositivo.toString()}
                 ListHeaderComponent={renderHeader}
                 renderItem={renderItem}
@@ -159,7 +162,7 @@ const TipoDispositivosScreen = () => {
                         value={nombre}
                         onChangeText={setNombre}
                     />
-                    <Button title={tipoSeleccionado ? 'Actualizar' : 'Agregar'} onPress={manejarTipoDispositivo} />
+                    <Button title={tipoSeleccionado ? 'Actualizar' : 'Agregar'} onPress={manejarTipo} />
                     <Button title="Cancelar" onPress={cerrarModal} />
                 </View>
             </Modal>
@@ -242,5 +245,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default TipoDispositivosScreen;
-
+export default TipoDispositivoScreen;
