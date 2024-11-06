@@ -3,6 +3,8 @@ import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, Touc
 
 const UnidadScreen = () => {
     const [unidades, setUnidades] = useState([]);
+    const [filteredUnidades, setFilteredUnidades] = useState([]); // Estado para unidades filtradas
+    const [searchText, setSearchText] = useState(''); // Estado para el texto de búsqueda
     const [modalVisible, setModalVisible] = useState(false);
     const [nombreUnidad, setNombreUnidad] = useState('');
     const [unidadSeleccionada, setUnidadSeleccionada] = useState(null);
@@ -13,8 +15,16 @@ const UnidadScreen = () => {
         fetch(API_URL)
             .then((response) => response.json())
             .then((data) => setUnidades(data))
-            .catch((error) => console.error('Error fetching data unidadess:', error));
+            .catch((error) => console.error('Error fetching data unidades:', error));
     }, []);
+
+    useEffect(() => {
+        setFilteredUnidades(
+            unidades.filter((unidad) =>
+                unidad.Nombre.toLowerCase().includes(searchText.toLowerCase())
+            )
+        );
+    }, [searchText, unidades]);
 
     // Manejar la edición o agregar una nueva unidad
     const manejarUnidad = () => {
@@ -141,14 +151,23 @@ const UnidadScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Lista de Unidades</Text>
-            <FlatList
-                data={unidades}
-                keyExtractor={(item) => item.ID_Unidad.toString()}
-                ListHeaderComponent={renderHeader}
-                renderItem={renderItem}
-                contentContainerStyle={styles.listContainer}
-            />
+        <Text style={styles.title}>Lista de Unidades</Text>
+        
+        {/* Barra de Búsqueda */}
+        <TextInput
+            style={styles.searchBar}
+            placeholder="Buscar por Nombre de Unidad"
+            value={searchText}
+            onChangeText={setSearchText}
+        />
+
+        <FlatList
+            data={filteredUnidades} // Usar unidades filtradas en lugar de todas las unidades
+            keyExtractor={(item) => item.ID_Unidad.toString()}
+            ListHeaderComponent={renderHeader}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContainer}
+        />
             <Button title="Agregar Unidad" onPress={() => setModalVisible(true)} />
             <Modal visible={modalVisible} animationType="slide">
                 <View style={styles.modalContent}>
@@ -175,6 +194,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    searchBar: {
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
         marginBottom: 10,
     },
     tableHeader: {

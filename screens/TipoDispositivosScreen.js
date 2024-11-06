@@ -3,6 +3,8 @@ import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, Touc
 
 const TipoDispositivoScreen = () => {
     const [tipos, setTipos] = useState([]);
+    const [filteredTipos, setFilteredTipos] = useState([]); // Estado para tipos filtrados
+    const [searchText, setSearchText] = useState(''); // Estado para el texto de búsqueda
     const [modalVisible, setModalVisible] = useState(false);
     const [nombre, setNombre] = useState('');
     const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
@@ -15,6 +17,14 @@ const TipoDispositivoScreen = () => {
             .then((data) => setTipos(data))
             .catch((error) => console.error('Error fetching data:', error));
     }, []);
+
+    useEffect(() => {
+        setFilteredTipos(
+            tipos.filter((tipo) =>
+                tipo.Nombre.toLowerCase().includes(searchText.toLowerCase())
+            )
+        );
+    }, [searchText, tipos]);    
 
     // Manejar la edición o agregar un nuevo tipo de dispositivo
     const manejarTipo = () => {
@@ -145,8 +155,17 @@ const TipoDispositivoScreen = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Lista de Tipos de Dispositivos</Text>
+            
+            {/* Barra de Búsqueda */}
+            <TextInput
+                style={styles.searchBar}
+                placeholder="Buscar por Nombre de Tipo"
+                value={searchText}
+                onChangeText={setSearchText}
+            />
+    
             <FlatList
-                data={tipos}
+                data={filteredTipos} // Usar tipos filtrados en lugar de todos los tipos
                 keyExtractor={(item) => item.ID_Tipo_Dispositivo.toString()}
                 ListHeaderComponent={renderHeader}
                 renderItem={renderItem}
@@ -178,6 +197,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    searchBar: {
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
         marginBottom: 10,
     },
     tableHeader: {
