@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 const DispositivosScreen = () => {
     const [dispositivos, setDispositivos] = useState([]);
@@ -27,7 +28,11 @@ const DispositivosScreen = () => {
     const [showRecepcionPicker, setShowRecepcionPicker] = useState(false);
     const [showBajaPicker, setShowBajaPicker] = useState(false);
 
-    const API_URL = 'http://192.168.100.51:4000/api/dispositivos';
+    // Construir endpoints usando API_URL
+    const dispositivosEndpoint = `${API_URL}/dispositivos`;
+    const usuariosEndpoint = `${API_URL}/usuarios`;
+    const marcasEndpoint = `${API_URL}/marcas`;
+    const tiposEndpoint = `${API_URL}/tipos`;
 
     useEffect(() => {
         fetchDispositivos();
@@ -37,7 +42,6 @@ const DispositivosScreen = () => {
     }, []);
 
     useEffect(() => {
-        // Verifica que el estado `usuarios` se actualice correctamente
         console.log('Estado usuarios actualizado:', usuarios);
     }, [usuarios]);
 
@@ -52,7 +56,7 @@ const DispositivosScreen = () => {
 
     const fetchDispositivos = async () => {
         try {
-            const response = await fetch(API_URL);
+            const response = await fetch(dispositivosEndpoint);
             const data = await response.json();
             setDispositivos(data);
         } catch (error) {
@@ -62,7 +66,7 @@ const DispositivosScreen = () => {
 
     const fetchUsuarios = async () => {
         try {
-            const response = await fetch('http://192.168.100.51:4000/api/usuarios');
+            const response = await fetch(usuariosEndpoint);
             const data = await response.json();
             console.log('Usuarios data:', data); // Verificar la estructura aquí
             setUsuarios(data);
@@ -73,7 +77,7 @@ const DispositivosScreen = () => {
 
     const fetchMarcas = async () => {
         try {
-            const response = await fetch('http://192.168.100.51:4000/api/marcas');
+            const response = await fetch(marcasEndpoint);
             const data = await response.json();
             setMarcas(data);
         } catch (error) {
@@ -83,7 +87,7 @@ const DispositivosScreen = () => {
 
     const fetchTipos = async () => {
         try {
-            const response = await fetch('http://192.168.100.51:4000/api/tipos');
+            const response = await fetch(tiposEndpoint);
             const data = await response.json();
             setTipos(data);
         } catch (error) {

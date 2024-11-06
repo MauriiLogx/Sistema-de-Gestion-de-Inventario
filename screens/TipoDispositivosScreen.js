@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 const TipoDispositivoScreen = () => {
     const [tipos, setTipos] = useState([]);
@@ -8,13 +9,18 @@ const TipoDispositivoScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [nombre, setNombre] = useState('');
     const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
-    const API_URL = 'http://192.168.100.51:4000/api/tipos'; // Reemplaza con tu URL de la API
+
+    // Construir el endpoint usando API_URL
+    const tiposEndpoint = `${API_URL}/tipos`;
 
     // Obtener los tipos de dispositivos desde la API
     useEffect(() => {
-        fetch(API_URL)
+        fetch(tiposEndpoint)
             .then((response) => response.json())
-            .then((data) => setTipos(data))
+            .then((data) => {
+                setTipos(data);
+                setFilteredTipos(data); // Inicializar tipos filtrados
+            })
             .catch((error) => console.error('Error fetching data:', error));
     }, []);
 

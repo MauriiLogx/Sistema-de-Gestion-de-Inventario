@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 const UnidadScreen = () => {
     const [unidades, setUnidades] = useState([]);
@@ -8,13 +9,18 @@ const UnidadScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [nombreUnidad, setNombreUnidad] = useState('');
     const [unidadSeleccionada, setUnidadSeleccionada] = useState(null);
-    const API_URL = 'http://192.168.100.51:4000/api/unidades'; // Asegúrate de que esta URL sea correcta y accesible
+
+    // Construir el endpoint usando API_URL
+    const unidadesEndpoint = `${API_URL}/unidades`;
 
     // Obtener las unidades desde la API
     useEffect(() => {
-        fetch(API_URL)
+        fetch(unidadesEndpoint)
             .then((response) => response.json())
-            .then((data) => setUnidades(data))
+            .then((data) => {
+                setUnidades(data);
+                setFilteredUnidades(data); // Inicializar unidades filtradas
+            })
             .catch((error) => console.error('Error fetching data unidades:', error));
     }, []);
 

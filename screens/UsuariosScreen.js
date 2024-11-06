@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { API_URL } from '@env';
 
 const UsuariosScreen = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -13,16 +14,19 @@ const UsuariosScreen = () => {
     const [unidad, setUnidad] = useState('');
     const [unidades, setUnidades] = useState([]);
     const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
-    const API_URL = 'http://192.168.100.51:4000/api/usuarios';
+
+    const usuariosEndpoint = `${API_URL}/usuarios`;
+    const unidadesEndpoint = `${API_URL}/unidades`;
 
     useEffect(() => {
-        fetch(API_URL)
+        // {endpoint de usuarios}
+        fetch(usuariosEndpoint)
             .then((response) => response.json())
             .then((data) => setUsuarios(data))
             .catch((error) => console.error('Error fetching usuarios:', error));
 
-        // Fetch para obtener las unidades
-        fetch('http://192.168.100.51:4000/api/unidades')
+        // {endpoint de unidades}
+        fetch(unidadesEndpoint)
             .then((response) => response.json())
             .then((data) => setUnidades(data))
             .catch((error) => console.error('Error fetching unidades:', error));

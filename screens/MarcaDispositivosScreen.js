@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 const MarcaDispositivosScreen = () => {
     const [marcas, setMarcas] = useState([]);
@@ -8,15 +9,17 @@ const MarcaDispositivosScreen = () => {
     const [marcaSeleccionada, setMarcaSeleccionada] = useState(null);
     const [searchText, setSearchText] = useState(''); // Estado para la barra de búsqueda
     const [filteredMarcas, setFilteredMarcas] = useState([]); // Estado para las marcas filtradas
-    const API_URL = 'http://192.168.100.51:4000/api/marcas'; // Reemplaza con tu URL de la API
+
+    // Construir el endpoint usando API_URL
+    const marcasEndpoint = `${API_URL}/marcas`;
 
     // Obtener las marcas de dispositivos desde la API
     useEffect(() => {
-        fetch(API_URL)
+        fetch(marcasEndpoint)
             .then((response) => response.json())
             .then((data) => {
                 setMarcas(data);
-                setFilteredMarcas(data);
+                setFilteredMarcas(data); // Inicializar marcas filtradas
             })
             .catch((error) => console.error('Error fetching data:', error));
     }, []);
