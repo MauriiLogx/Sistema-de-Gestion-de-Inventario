@@ -21,6 +21,9 @@ const DispositivosScreen = () => {
     const [fechaRecepcion, setFechaRecepcion] = useState(new Date());
     const [fechaBaja, setFechaBaja] = useState(null);
 
+    const [searchText, setSearchText] = useState(''); // Estado para la barra de búsqueda
+    const [filteredDispositivos, setFilteredDispositivos] = useState([]); // Estado para almacenar dispositivos filtrados
+
     const [showRecepcionPicker, setShowRecepcionPicker] = useState(false);
     const [showBajaPicker, setShowBajaPicker] = useState(false);
 
@@ -37,6 +40,15 @@ const DispositivosScreen = () => {
         // Verifica que el estado `usuarios` se actualice correctamente
         console.log('Estado usuarios actualizado:', usuarios);
     }, [usuarios]);
+
+    useEffect(() => {
+        setFilteredDispositivos(
+            dispositivos.filter((dispositivo) =>
+                dispositivo.Numero_Serie.toLowerCase().includes(searchText.toLowerCase()) ||
+                dispositivo.Usuario.toLowerCase().includes(searchText.toLowerCase())
+            )
+        );
+    }, [searchText, dispositivos]);
 
     const fetchDispositivos = async () => {
         try {
@@ -250,16 +262,26 @@ const cargarDatosDispositivo = (numeroSerie) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Lista de Dispositivos</Text>
+    
+            {/* Barra de Búsqueda */}
+            <TextInput
+                style={styles.searchBar}
+                placeholder="Buscar por Número de Serie o Usuario"
+                value={searchText}
+                onChangeText={setSearchText}
+            />
+    
             <ScrollView horizontal={true}>
                 <View>
                     {renderHeader()}
                     <FlatList
-                        data={dispositivos}
+                        data={filteredDispositivos} // Usar dispositivos filtrados en lugar de todos los dispositivos
                         keyExtractor={(item) => (item.Numero_Serie ? item.Numero_Serie.toString() : '')}
                         renderItem={renderItem}
                     />
                 </View>
             </ScrollView>
+            
             <Button title="Añadir Dispositivo" onPress={() => setModalVisible(true)} />
     
             <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={cerrarModal}>
