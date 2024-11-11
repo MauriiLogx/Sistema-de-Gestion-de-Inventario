@@ -10,126 +10,126 @@ const TipoDispositivoScreen = () => {
     const [nombre, setNombre] = useState('');
     const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
 
-    // Construir el endpoint usando API_URL
-    const tiposEndpoint = `${API_URL}/tipos`;
+// Construir el endpoint usando API_URL
+const tiposEndpoint = `${API_URL}/tipos`;
 
-    // Obtener los tipos de dispositivos desde la API
-    useEffect(() => {
-        fetch(tiposEndpoint)
-            .then((response) => response.json())
+// Obtener los tipos de dispositivos desde la API
+useEffect(() => {
+    fetch(tiposEndpoint)
+        .then((response) => response.json())
+        .then((data) => {
+            setTipos(data);
+            setFilteredTipos(data); // Inicializar tipos filtrados
+        })
+        .catch((error) => console.error('Error fetching data:', error));
+}, []);
+
+useEffect(() => {
+    setFilteredTipos(
+        tipos.filter((tipo) =>
+            tipo.Nombre.toLowerCase().includes(searchText.toLowerCase())
+        )
+    );
+}, [searchText, tipos]);
+
+// Manejar la edición o agregar un nuevo tipo de dispositivo
+const manejarTipo = () => {
+    const nuevoTipo = {
+        Nombre: nombre,
+    };
+
+    if (!nombre) {
+        Alert.alert('Error', 'El nombre del tipo de dispositivo es obligatorio.');
+        return;
+    }
+
+    if (tipoSeleccionado) {
+        // Editar tipo de dispositivo
+        fetch(`${tiposEndpoint}/${tipoSeleccionado.ID_Tipo_Dispositivo}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevoTipo),
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                return response.json();
+            })
+            .then(() => {
+                const tiposActualizados = tipos.map((tipo) =>
+                    tipo.ID_Tipo_Dispositivo === tipoSeleccionado.ID_Tipo_Dispositivo ? { ...tipo, ...nuevoTipo } : tipo
+                );
+                setTipos(tiposActualizados);
+                cerrarModal();
+            })
+            .catch((error) => {
+                console.error('Error al editar tipo de dispositivo:', error);
+                Alert.alert('Error', 'No se pudo editar el tipo de dispositivo.');
+            });
+    } else {
+        // Agregar nuevo tipo de dispositivo
+        fetch(tiposEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevoTipo),
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                return response.json();
+            })
             .then((data) => {
-                setTipos(data);
-                setFilteredTipos(data); // Inicializar tipos filtrados
-            })
-            .catch((error) => console.error('Error fetching data:', error));
-    }, []);
+                console.log('Respuesta del servidor al agregar tipo de dispositivo:', data);
 
-    useEffect(() => {
-        setFilteredTipos(
-            tipos.filter((tipo) =>
-                tipo.Nombre.toLowerCase().includes(searchText.toLowerCase())
-            )
-        );
-    }, [searchText, tipos]);    
-
-    // Manejar la edición o agregar un nuevo tipo de dispositivo
-    const manejarTipo = () => {
-        const nuevoTipo = {
-            Nombre: nombre,
-        };
-
-        if (!nombre) {
-            Alert.alert('Error', 'El nombre del tipo de dispositivo es obligatorio.');
-            return;
-        }
-
-        if (tipoSeleccionado) {
-            // Editar tipo de dispositivo
-            fetch(`${API_URL}/${tipoSeleccionado.ID_Tipo_Dispositivo}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoTipo),
-            })
-                .then((response) => {
-                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                    return response.json();
-                })
-                .then(() => {
-                    const tiposActualizados = tipos.map((tipo) =>
-                        tipo.ID_Tipo_Dispositivo === tipoSeleccionado.ID_Tipo_Dispositivo ? { ...tipo, ...nuevoTipo } : tipo
-                    );
-                    setTipos(tiposActualizados);
+                // Verificamos que 'data' contenga el 'ID_Tipo_Dispositivo'
+                if (data && data.ID_Tipo_Dispositivo) {
+                    const nuevoTipoConID = {
+                        ID_Tipo_Dispositivo: data.ID_Tipo_Dispositivo,
+                        Nombre: data.Nombre,
+                    };
+                    setTipos([...tipos, nuevoTipoConID]);
                     cerrarModal();
-                })
-                .catch((error) => {
-                    console.error('Error al editar tipo de dispositivo:', error);
-                    Alert.alert('Error', 'No se pudo editar el tipo de dispositivo.');
-                });
-        } else {
-            // Agregar nuevo tipo de dispositivo
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoTipo),
+                } else {
+                    throw new Error('La respuesta no contiene un ID válido');
+                }
             })
-                .then((response) => {
-                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                    return response.json();
-                })
-                .then((data) => {
-                    console.log('Respuesta del servidor al agregar tipo de dispositivo:', data);
+            .catch((error) => {
+                console.error('Error al agregar tipo de dispositivo:', error);
+                Alert.alert('Error', 'No se pudo agregar el tipo de dispositivo.');
+            });
+    }
+};
 
-                    // Verificamos que 'data' contenga el 'ID_Tipo_Dispositivo'
-                    if (data && data.ID_Tipo_Dispositivo) {
-                        const nuevoTipoConID = {
-                            ID_Tipo_Dispositivo: data.ID_Tipo_Dispositivo,
-                            Nombre: data.Nombre,
-                        };
-                        setTipos([...tipos, nuevoTipoConID]);
-                        cerrarModal();
-                    } else {
-                        throw new Error('La respuesta no contiene un ID válido');
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error al agregar tipo de dispositivo:', error);
-                    Alert.alert('Error', 'No se pudo agregar el tipo de dispositivo.');
-                });
-        }
-    };
+const editarTipo = (tipo) => {
+    setTipoSeleccionado(tipo);
+    setNombre(tipo.Nombre);
+    setModalVisible(true);
+};
 
-    const editarTipo = (tipo) => {
-        setTipoSeleccionado(tipo);
-        setNombre(tipo.Nombre);
-        setModalVisible(true);
-    };
-
-    const eliminarTipo = (id) => {
-        Alert.alert(
-            'Eliminar Tipo de Dispositivo',
-            '¿Estás seguro de que deseas eliminar este tipo de dispositivo?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
+const eliminarTipo = (id) => {
+    Alert.alert(
+        'Eliminar Tipo de Dispositivo',
+        '¿Estás seguro de que deseas eliminar este tipo de dispositivo?',
+        [
+            {
+                text: 'Cancelar',
+                style: 'cancel',
+            },
+            {
+                text: 'Eliminar',
+                onPress: () => {
+                    fetch(`${tiposEndpoint}/${id}`, { method: 'DELETE' })
+                        .then((response) => {
+                            if (!response.ok) throw new Error('Error al eliminar el tipo de dispositivo');
+                            setTipos(tipos.filter((tipo) => tipo.ID_Tipo_Dispositivo !== id));
+                        })
+                        .catch((error) => {
+                            console.error('Error al eliminar tipo de dispositivo:', error);
+                            Alert.alert('Error', 'No se pudo eliminar el tipo de dispositivo.');
+                        });
                 },
-                {
-                    text: 'Eliminar',
-                    onPress: () => {
-                        fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-                            .then((response) => {
-                                if (!response.ok) throw new Error('Error al eliminar el tipo de dispositivo');
-                                setTipos(tipos.filter((tipo) => tipo.ID_Tipo_Dispositivo !== id));
-                            })
-                            .catch((error) => {
-                                console.error('Error al eliminar tipo de dispositivo:', error);
-                                Alert.alert('Error', 'No se pudo eliminar el tipo de dispositivo.');
-                            });
-                    },
-                },
-            ]
-        );
-    };
+            },
+        ]
+    );
+};
 
     const cerrarModal = () => {
         setNombre('');
@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
+        backgroundColor: '#fff',
     },
     title: {
         fontSize: 20,
@@ -215,9 +216,11 @@ const styles = StyleSheet.create({
     },
     tableHeader: {
         flexDirection: 'row',
-        backgroundColor: '#f4f4f4',
+        backgroundColor: '#f2f2f2',
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
         paddingVertical: 10,
-        paddingHorizontal: 5,
     },
     headerTextNombre: {
         flex: 1,
@@ -229,13 +232,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'right',
         marginRight: 3,
-    },
+    },    
     tableRow: {
         flexDirection: 'row',
-        paddingVertical: 10,
-        paddingHorizontal: 5,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
+        paddingVertical: 10,
     },
     cellText: {
         flex: 1,
@@ -245,36 +247,43 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     editButton: {
-        backgroundColor: 'blue',
-        padding: 5,
-        marginRight: 5,
-    },
-    editButtonText: {
-        color: 'white',
+        backgroundColor: '#b326f7',
+        padding: 10,
+        borderRadius: 5,
     },
     deleteButton: {
-        backgroundColor: 'red',
-        padding: 5,
+        backgroundColor: '#f44336',
+        padding: 10,
+        borderRadius: 5,
+    },
+    editButtonText: {
+        color: '#fff',
     },
     deleteButtonText: {
-        color: 'white',
+        color: '#fff',
     },
     modalView: {
-        backgroundColor: 'white',
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: '#b0b0b0',
         padding: 20,
         margin: 20,
-        borderRadius: 10,
+        borderRadius: 20,
     },
     modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
+        fontSize: 20,
+        marginBottom: 20,
+        textAlign: 'center',
     },
     input: {
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        height: 40,
+        width: '80%',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
         marginBottom: 10,
-        padding: 5,
+        backgroundColor: '#fff',
     },
 });
 

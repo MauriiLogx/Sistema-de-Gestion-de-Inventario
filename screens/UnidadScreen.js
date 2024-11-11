@@ -10,123 +10,123 @@ const UnidadScreen = () => {
     const [nombreUnidad, setNombreUnidad] = useState('');
     const [unidadSeleccionada, setUnidadSeleccionada] = useState(null);
 
-    // Construir el endpoint usando API_URL
-    const unidadesEndpoint = `${API_URL}/unidades`;
+// Construir el endpoint usando API_URL
+const unidadesEndpoint = `${API_URL}/unidades`;
 
-    // Obtener las unidades desde la API
-    useEffect(() => {
-        fetch(unidadesEndpoint)
-            .then((response) => response.json())
+// Obtener las unidades desde la API
+useEffect(() => {
+    fetch(unidadesEndpoint)
+        .then((response) => response.json())
+        .then((data) => {
+            setUnidades(data);
+            setFilteredUnidades(data); // Inicializar unidades filtradas
+        })
+        .catch((error) => console.error('Error fetching data unidades:', error));
+}, []);
+
+useEffect(() => {
+    setFilteredUnidades(
+        unidades.filter((unidad) =>
+            unidad.Nombre.toLowerCase().includes(searchText.toLowerCase())
+        )
+    );
+}, [searchText, unidades]);
+
+// Manejar la edición o agregar una nueva unidad
+const manejarUnidad = () => {
+    const nuevaUnidad = {
+        Nombre: nombreUnidad,
+    };
+
+    if (!nombreUnidad) {
+        Alert.alert('Error', 'El nombre de la unidad es obligatorio.');
+        return;
+    }
+
+    if (unidadSeleccionada) {
+        // Editar unidad
+        fetch(`${unidadesEndpoint}/${unidadSeleccionada.ID_Unidad}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevaUnidad),
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                return response.json();
+            })
+            .then(() => {
+                const unidadesActualizadas = unidades.map((unidad) =>
+                    unidad.ID_Unidad === unidadSeleccionada.ID_Unidad ? { ...unidad, ...nuevaUnidad } : unidad
+                );
+                setUnidades(unidadesActualizadas);
+                cerrarModal();
+            })
+            .catch((error) => {
+                console.error('Error al editar unidad:', error);
+                Alert.alert('Error', 'No se pudo editar la unidad.');
+            });
+    } else {
+        // Agregar nueva unidad
+        fetch(unidadesEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevaUnidad),
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                return response.json();
+            })
             .then((data) => {
-                setUnidades(data);
-                setFilteredUnidades(data); // Inicializar unidades filtradas
-            })
-            .catch((error) => console.error('Error fetching data unidades:', error));
-    }, []);
-
-    useEffect(() => {
-        setFilteredUnidades(
-            unidades.filter((unidad) =>
-                unidad.Nombre.toLowerCase().includes(searchText.toLowerCase())
-            )
-        );
-    }, [searchText, unidades]);
-
-    // Manejar la edición o agregar una nueva unidad
-    const manejarUnidad = () => {
-        const nuevaUnidad = {
-            Nombre: nombreUnidad,
-        };
-
-        if (!nombreUnidad) {
-            Alert.alert('Error', 'El nombre de la unidad es obligatorio.');
-            return;
-        }
-
-        if (unidadSeleccionada) {
-            // Editar unidad
-            fetch(`${API_URL}/${unidadSeleccionada.ID_Unidad}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevaUnidad),
-            })
-                .then((response) => {
-                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                    return response.json();
-                })
-                .then(() => {
-                    const unidadesActualizadas = unidades.map((unidad) =>
-                        unidad.ID_Unidad === unidadSeleccionada.ID_Unidad ? { ...unidad, ...nuevaUnidad } : unidad
-                    );
-                    setUnidades(unidadesActualizadas);
+                if (data && data.ID_Unidad) {
+                    const nuevaUnidadConID = {
+                        ID_Unidad: data.ID_Unidad,
+                        Nombre: data.Nombre,
+                    };
+                    setUnidades([...unidades, nuevaUnidadConID]);
                     cerrarModal();
-                })
-                .catch((error) => {
-                    console.error('Error al editar unidad:', error);
-                    Alert.alert('Error', 'No se pudo editar la unidad.');
-                });
-        } else {
-            // Agregar nueva unidad
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevaUnidad),
+                } else {
+                    throw new Error('La respuesta no contiene un ID válido');
+                }
             })
-                .then((response) => {
-                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                    return response.json();
-                })
-                .then((data) => {
-                    if (data && data.ID_Unidad) {
-                        const nuevaUnidadConID = {
-                            ID_Unidad: data.ID_Unidad,
-                            Nombre: data.Nombre,
-                        };
-                        setUnidades([...unidades, nuevaUnidadConID]);
-                        cerrarModal();
-                    } else {
-                        throw new Error('La respuesta no contiene un ID válido');
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error al agregar unidad:', error);
-                    Alert.alert('Error', 'No se pudo agregar la unidad.');
-                });
-        }
-    };
+            .catch((error) => {
+                console.error('Error al agregar unidad:', error);
+                Alert.alert('Error', 'No se pudo agregar la unidad.');
+            });
+    }
+};
 
-    const editarUnidad = (unidad) => {
-        setUnidadSeleccionada(unidad);
-        setNombreUnidad(unidad.Nombre);
-        setModalVisible(true);
-    };
+const editarUnidad = (unidad) => {
+    setUnidadSeleccionada(unidad);
+    setNombreUnidad(unidad.Nombre);
+    setModalVisible(true);
+};
 
-    const eliminarUnidad = (id) => {
-        Alert.alert(
-            'Eliminar Unidad',
-            '¿Estás seguro de que deseas eliminar esta unidad?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
+const eliminarUnidad = (id) => {
+    Alert.alert(
+        'Eliminar Unidad',
+        '¿Estás seguro de que deseas eliminar esta unidad?',
+        [
+            {
+                text: 'Cancelar',
+                style: 'cancel',
+            },
+            {
+                text: 'Eliminar',
+                onPress: () => {
+                    fetch(`${unidadesEndpoint}/${id}`, { method: 'DELETE' })
+                        .then((response) => {
+                            if (!response.ok) throw new Error('Error al eliminar la unidad');
+                            setUnidades(unidades.filter((unidad) => unidad.ID_Unidad !== id));
+                        })
+                        .catch((error) => {
+                            console.error('Error al eliminar unidad:', error);
+                            Alert.alert('Error', 'No se pudo eliminar la unidad.');
+                        });
                 },
-                {
-                    text: 'Eliminar',
-                    onPress: () => {
-                        fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-                            .then((response) => {
-                                if (!response.ok) throw new Error('Error al eliminar la unidad');
-                                setUnidades(unidades.filter((unidad) => unidad.ID_Unidad !== id));
-                            })
-                            .catch((error) => {
-                                console.error('Error al eliminar unidad:', error);
-                                Alert.alert('Error', 'No se pudo eliminar la unidad.');
-                            });
-                    },
-                },
-            ]
-        );
-    };
+            },
+        ]
+    );
+};
 
     const cerrarModal = () => {
         setNombreUnidad('');
@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
+        backgroundColor: '#fff',
     },
     title: {
         fontSize: 20,
@@ -212,9 +213,11 @@ const styles = StyleSheet.create({
     },
     tableHeader: {
         flexDirection: 'row',
-        backgroundColor: '#f4f4f4',
+        backgroundColor: '#f2f2f2',
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
         paddingVertical: 10,
-        paddingHorizontal: 5,
     },
     headerTextNombre: {
         flex: 1,
@@ -229,10 +232,9 @@ const styles = StyleSheet.create({
     },    
     tableRow: {
         flexDirection: 'row',
-        paddingVertical: 10,
-        paddingHorizontal: 5,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
+        paddingVertical: 10,
     },
     cellText: {
         flex: 1,
@@ -242,35 +244,43 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     editButton: {
-        backgroundColor: 'blue',
-        padding: 5,
-        marginRight: 5,
-    },
-    editButtonText: {
-        color: 'white',
+        backgroundColor: '#b326f7',
+        padding: 10,
+        borderRadius: 5,
     },
     deleteButton: {
-        backgroundColor: 'red',
-        padding: 5,
+        backgroundColor: '#f44336',
+        padding: 10,
+        borderRadius: 5,
+    },
+    editButtonText: {
+        color: '#fff',
     },
     deleteButtonText: {
-        color: 'white',
+        color: '#fff',
     },
-    modalContent: {
+    modalView: {
         flex: 1,
         justifyContent: 'center',
+        backgroundColor: '#b0b0b0',
         padding: 20,
+        margin: 20,
+        borderRadius: 20,
     },
     modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
+        fontSize: 20,
+        marginBottom: 20,
+        textAlign: 'center',
     },
     input: {
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        height: 40,
+        width: '80%',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
         marginBottom: 10,
-        padding: 5,
+        backgroundColor: '#fff',
     },
 });
 

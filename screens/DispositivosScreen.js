@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
+
 const DispositivosScreen = () => {
     const [dispositivos, setDispositivos] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
@@ -125,9 +126,11 @@ const manejarDispositivo = () => {
         return;
     }
 
-    // Definir método y URL según si se está editando o creando un dispositivo
-    const metodo = dispositivoSeleccionado ? 'PUT' : 'POST';
-    const url = dispositivoSeleccionado ? `${API_URL}/${dispositivoSeleccionado.Numero_Serie}` : API_URL;
+// Definir método y URL según si se está editando o creando un dispositivo
+const metodo = dispositivoSeleccionado ? 'PUT' : 'POST';
+const url = dispositivoSeleccionado 
+    ? `${API_URL}/dispositivos/${dispositivoSeleccionado.Numero_Serie}` 
+    : `${API_URL}/dispositivos`;
 
     console.log("Datos a enviar:", nuevoDispositivo); // Para depuración
 
@@ -167,7 +170,7 @@ const cerrarModal = () => {
 
 // Nueva función para cargar los datos completos de un dispositivo
 const cargarDatosDispositivo = (numeroSerie) => {
-    const url = `${API_URL}/${numeroSerie}`;
+    const url = `${API_URL}/dispositivos/${numeroSerie}`;
 
     fetch(url)
         .then((response) => {
@@ -212,7 +215,7 @@ const cargarDatosDispositivo = (numeroSerie) => {
                     text: 'Eliminar',
                     style: 'destructive',
                     onPress: () => {
-                        fetch(`${API_URL}/${numeroSerie}`, { method: 'DELETE' })
+                        fetch(`${dispositivosEndpoint}/${numeroSerie}`, { method: 'DELETE' })
                             .then((response) => {
                                 if (!response.ok) throw new Error('Error en la respuesta del servidor');
                                 return response.json();
@@ -263,6 +266,7 @@ const cargarDatosDispositivo = (numeroSerie) => {
         </View>
     );
 
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Lista de Dispositivos</Text>
@@ -275,8 +279,8 @@ const cargarDatosDispositivo = (numeroSerie) => {
                 onChangeText={setSearchText}
             />
     
-            <ScrollView horizontal={true}>
-                <View>
+            <ScrollView horizontal={true} contentContainerStyle={{ flexGrow: 1 }}>
+                <View style={{ width: '100%' }}>
                     {renderHeader()}
                     <FlatList
                         data={filteredDispositivos} // Usar dispositivos filtrados en lugar de todos los dispositivos
@@ -414,6 +418,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 20,
     },
+    tableContainer: {
+        flex: 1,
+        minWidth: '100%', // Hace que la tabla se expanda por todo el ancho disponible
+    },
     tableHeader: {
         flexDirection: 'row',
         backgroundColor: '#f2f2f2',
@@ -421,18 +429,21 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderColor: '#ccc',
         paddingVertical: 10,
+        minWidth: '100%',
     },
     headerText: {
         flex: 1,
         textAlign: 'left', // Alineación centrada para los encabezados
         fontWeight: 'bold',
         width: 100, // Asegúrate de que el ancho coincida con las celdas
+        minWidth: 100,
     },
     tableRow: {
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
         paddingVertical: 10,
+        minWidth: '100%',
     },
     cellText: {
         flex: 1,
@@ -443,6 +454,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
+        minWidth: 150,
     },
     editButton: {
         backgroundColor: '#b326f7',

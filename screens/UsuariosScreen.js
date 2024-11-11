@@ -55,7 +55,7 @@ const UsuariosScreen = () => {
 
         if (usuarioSeleccionado) {
             // Modo edición
-            fetch(`${API_URL}/${usuarioSeleccionado.RUN}`, {
+            fetch(`${usuariosEndpoint}/${usuarioSeleccionado.RUN}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(nuevoUsuario),
@@ -77,28 +77,31 @@ const UsuariosScreen = () => {
                 });
         } else {
             // Fetch para agregar Usuario
-            fetch(API_URL, {
+            fetch(usuariosEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(nuevoUsuario),
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                return response.json();
             })
-                .then((response) => {
-                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                    return response.json();
-                })
-                .then((data) => {
+            .then((data) => {
             // Después de que añadimos el usuario, haremos un fetch para obtener la lista actualizada
-            fetch(API_URL)
-                .then((response) => response.json())
-                .then((usuariosActualizados) => {
-                    setUsuarios(usuariosActualizados); // Actualiza la lista completa
-                    cerrarModal();
-                })
-                })
-                .catch((error) => {
-                    console.error('Error al agregar usuario:', error);
-                    Alert.alert('Error', 'No se pudo agregar el usuario.');
-                });
+                return fetch(usuariosEndpoint); // Cambiado a usuariosEndpoint
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta al obtener la lista actualizada');
+                return response.json();
+            })
+            .then((usuariosActualizados) => {
+                setUsuarios(usuariosActualizados); // Actualiza la lista completa
+                cerrarModal();
+            })
+            .catch((error) => {
+                console.error('Error al agregar usuario:', error);
+                Alert.alert('Error', 'No se pudo agregar el usuario.');
+            });
         }
     };
 
@@ -123,7 +126,7 @@ const UsuariosScreen = () => {
                 {
                     text: 'Eliminar',
                     onPress: () => {
-                        fetch(`${API_URL}/${run}`, { method: 'DELETE' })
+                        fetch(`${usuariosEndpoint}/${run}`, { method: 'DELETE' }) 
                             .then((response) => {
                                 if (!response.ok) throw new Error('Error al eliminar el usuario');
                                 setUsuarios(usuarios.filter((usuario) => usuario.RUN !== run));
@@ -183,8 +186,8 @@ const UsuariosScreen = () => {
                 value={searchTerm}
                 onChangeText={setSearchTerm}
             />
-            <ScrollView horizontal={true}>
-                <View>
+            <ScrollView horizontal={true} contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={{ width: '100%' }}>
                     {renderHeader()}
                     {filteredUsuarios.length > 0 ? (
                         <FlatList
@@ -267,6 +270,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 20,
     },
+    tableContainer: {
+        flex: 1,
+        minWidth: '100%', // Hace que la tabla se expanda por todo el ancho disponible
+    },
     tableHeader: {
         flexDirection: 'row',
         backgroundColor: '#f2f2f2',
@@ -274,24 +281,28 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderColor: '#ccc',
         paddingVertical: 10,
+        minWidth: '100%',
     },
     headerText: {
-        flex: 1,
-        textAlign: 'center',
+        flex: 2,
+        textAlign: 'left',
         fontWeight: 'bold',
+        width: 100, // Asegúrate de que el ancho coincida con las celdas
     },
     tableRow: {
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
         paddingVertical: 10,
+        minWidth: '100%',
     },
     cellText: {
-        flex: 1,
-        textAlign: 'center',
-        width: 100
+        flex: 2,
+        textAlign: 'left', // Alineación centrada para las celdas
+        width: 100, // Debe coincidir con el ancho de headerText
     },
     cellActions: {
+        flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
@@ -320,6 +331,9 @@ const styles = StyleSheet.create({
         margin: 20,
         borderRadius: 20,
     },
+    scrollViewContainer: {
+        paddingBottom: 20, // Agrega un padding inferior para el scroll
+    },
     modalTitle: {
         fontSize: 20,
         marginBottom: 20,
@@ -337,8 +351,8 @@ const styles = StyleSheet.create({
     },
     picker: {
         height: 50,
-        width: '80%',
-        marginBottom: 20,
+        width: '100%',
+        marginBottom: 10,
     },
 });
 

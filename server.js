@@ -4,6 +4,7 @@ const cors = require('cors'); // Middleware para habilitar CORS
 const mysql = require('mysql2'); // Biblioteca para conectarse a MySQL
 const bodyParser = require('body-parser'); // Middleware para parsear cuerpos de solicitudes HTTP
 const port = 4000; // Definición del puerto en el que se ejecutará el servidor
+const util = require('util');
 
 const app = express(); // Crea una instancia de la aplicación Express
 app.use(cors()); // Habilita CORS para permitir solicitudes desde cualquier origen
@@ -17,6 +18,9 @@ const db = mysql.createConnection({
     database: 'gestion_inventarios', // Nombre de la base de datos
 });
 
+// Promisificar la función db.query
+const query = util.promisify(db.query).bind(db);
+
 // Conexión a la base de datos
 db.connect((err) => {
     if (err) {
@@ -26,12 +30,33 @@ db.connect((err) => {
     console.log('Conectado a la base de datos MySQL'); // Mensaje de éxito en la conexión
 });
 
+// Ruta para obtener estadísticas de dispositivos y usuarios
+app.get('/api/inicio', async (req, res) => {
+    try {
+        const dispositivosIngresadosResults = await query('SELECT COUNT(*) AS total FROM Dispositivo');
+        const dispositivosActivosResults = await query('SELECT COUNT(*) AS activos FROM Dispositivo WHERE Estado = "activo"');
+        const dispositivosInactivosResults = await query('SELECT COUNT(*) AS inactivos FROM Dispositivo WHERE Estado = "inactivo"');
+        const usuariosIngresadosResults = await query('SELECT COUNT(*) AS total FROM Usuario');
+
+        res.json({
+            dispositivosIngresados: dispositivosIngresadosResults[0].total,
+            dispositivosActivos: dispositivosActivosResults[0].activos,
+            dispositivosInactivos: dispositivosInactivosResults[0].inactivos,
+            usuariosIngresados: usuariosIngresadosResults[0].total,
+        });
+    } catch (error) {
+        console.error('Error al obtener estadísticas:', error);
+        res.status(500).json({ message: 'Error al obtener estadísticas' });
+    }
+});
+
 // ------------------- Rutas para usuario -------------------
 
 // Ruta para obtener los usuarios
 app.get('/api/usuarios', (req, res) => {
     const sql = `
         SELECT 
+            u.ID_Usuario,
             u.Nombre, 
             u.Email, 
             un.Nombre AS Unidad, 
@@ -39,12 +64,12 @@ app.get('/api/usuarios', (req, res) => {
         FROM 
             Usuario u
             LEFT JOIN 
-        Unidad un ON u.Unidad_ID = un.ID_Unidad
+            Unidad un ON u.Unidad_ID = un.ID_Unidad
     `;
 
     db.query(sql, (err, results) => {
         if (err) {
-            console.error('Error en la consulta SELECT:', err);
+            console.error('Error en la consulta SELECT de usuarios:', err);
             return res.status(500).json({ message: 'Error al obtener los usuarios' });
         }
         res.json(results);
@@ -396,6 +421,7 @@ app.delete('/api/unidades/:id', (req, res) => {
 app.get('/api/dispositivos', (req, res) => {
     const sql = `
         SELECT 
+            d.ID_Dispositivo,
             d.Numero_Serie, 
             m.Nombre AS Marca, 
             d.Modelo, 
@@ -602,6 +628,157 @@ app.delete('/api/dispositivos/:numeroSerie', (req, res) => {
         }
 
         res.json({ message: 'Dispositivo eliminado correctamente' });
+    });
+});
+
+// --------------------- Rutas para mantenimiento ---------------------------
+
+// Ruta para obtener los mantenimientos
+app.get('/api/mantenimientos', (req, res) => {
+    const sql = `
+        SELECT 
+            m.ID_Mantenimiento,
+            m.Prioridad,
+            m.Estado,
+            m.Fecha_Ingreso,
+            m.Fecha_Finalizacion,
+            m.Comentarios,
+            u.Nombre AS Encargado,
+            d.Numero_Serie AS Dispositivo
+        FROM 
+            Mantenimiento m
+            LEFT JOIN Usuario u ON m.Encargado_ID = u.ID_Usuario
+            LEFT JOIN Dispositivo d ON m.Dispositivo_ID = d.ID_Dispositivo
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error en la consulta SELECT de mantenimientos:', err);
+            return res.status(500).json({ message: 'Error al obtener los mantenimientos' });
+        }
+        res.json(results);
+    });
+});
+
+// Ruta para agregar un nuevo mantenimiento
+app.post('/api/mantenimientos', (req, res) => {
+    const { Prioridad, Estado, Encargado_ID, Dispositivo_ID, Fecha_Ingreso, Fecha_Finalizacion, Comentarios } = req.body;
+
+    // Mostrar datos recibidos para depuración
+    console.log("Datos recibidos en el backend para agregar mantenimiento:", req.body); 
+
+    // Validación inicial de campos obligatorios
+    if (!Prioridad || !Estado || !Encargado_ID || !Fecha_Ingreso || !Dispositivo_ID) {
+        console.error('Error de validación - Faltan campos obligatorios en la solicitud POST:', req.body);
+        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    }
+
+    // Validar Fecha_Finalizacion solo si Estado es 'completada'
+    if (Estado.toLowerCase() === 'completada' && !Fecha_Finalizacion) {
+        console.error('Error de validación - Fecha_Finalizacion es obligatoria cuando el estado es completada:', req.body);
+        return res.status(400).json({ message: 'Fecha de finalización es obligatoria cuando el estado es completada' });
+    }
+
+    // SQL para insertar datos
+    const sql = `
+        INSERT INTO Mantenimiento 
+            (Prioridad, Estado, Encargado_ID, Dispositivo_ID, Fecha_Ingreso, Fecha_Finalizacion, Comentarios) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(sql, [
+        Prioridad,
+        Estado,
+        Encargado_ID,
+        Dispositivo_ID,
+        Fecha_Ingreso,
+        Fecha_Finalizacion || null, 
+        Comentarios || null 
+    ], (err, result) => {
+        if (err) {
+            console.error('Error al insertar el mantenimiento en la base de datos:', err);
+            return res.status(500).json({ message: 'Error al agregar el mantenimiento' });
+        }
+
+        res.status(201).json({
+            message: 'Mantenimiento agregado correctamente',
+            mantenimiento: { Prioridad, Estado, Encargado_ID, Dispositivo_ID, Fecha_Ingreso, Fecha_Finalizacion, Comentarios }
+        });
+    });
+});
+
+// Ruta para editar un mantenimiento existente
+app.put('/api/mantenimientos/:id', (req, res) => {
+    const { id } = req.params;
+    const { Prioridad, Estado, Encargado_ID, Dispositivo_ID, Fecha_Ingreso, Fecha_Finalizacion, Comentarios } = req.body;
+
+    if (!Prioridad || !Estado || !Encargado_ID || !Dispositivo_ID || !Fecha_Ingreso || !Comentarios) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    }
+
+    const sql = `
+        UPDATE Mantenimiento
+        SET Prioridad = ?, Estado = ?, Encargado_ID = ?, Dispositivo_ID = ?, Fecha_Ingreso = ?, Fecha_Finalizacion = ?, Comentarios = ?
+        WHERE ID_Mantenimiento = ?
+    `;
+
+    db.query(sql, [Prioridad, Estado, Fecha_Ingreso, Fecha_Finalizacion || null, Encargado_ID, Dispositivo_ID, Comentarios || null, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el mantenimiento:', err);
+            return res.status(500).json({ message: 'Error al editar el mantenimiento' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Mantenimiento no encontrado' });
+        }
+
+        res.json({ message: 'Mantenimiento actualizado correctamente' });
+    });
+});
+
+// Ruta para obtener los datos de un mantenimiento específico por ID
+app.get('/api/mantenimientos/:id', (req, res) => {
+    const { id } = req.params;
+
+    const querySql = `
+        SELECT m.ID_Mantenimiento, m.Prioridad, m.Estado, m.Fecha_Ingreso, m.Fecha_Finalizacion, m.Comentarios,
+        u.ID_Usuario AS Encargado_ID, d.ID_Dispositivo AS Dispositivo_ID
+        FROM Mantenimiento m
+        LEFT JOIN Usuario u ON m.Encargado_ID = u.ID_Usuario
+        LEFT JOIN Dispositivo d ON m.Dispositivo_ID = d.ID_Dispositivo
+        WHERE m.ID_Mantenimiento = ?
+    `;
+
+    db.query(querySql, [id], (err, result) => {
+        if (err) {
+            console.error('Error al obtener datos del mantenimiento:', err);
+            return res.status(500).json({ message: 'Error al obtener el mantenimiento' });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Mantenimiento no encontrado' });
+        }
+
+        res.json(result[0]);
+    });
+});
+
+// Ruta para eliminar un mantenimiento
+app.delete('/api/mantenimientos/:id', (req, res) => {
+    const { id } = req.params;
+
+    const sql = `DELETE FROM Mantenimiento WHERE ID_Mantenimiento = ?`;
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error al eliminar el mantenimiento:', err);
+            return res.status(500).json({ message: 'Error al eliminar el mantenimiento' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Mantenimiento no encontrado' });
+        }
+
+        res.json({ message: 'Mantenimiento eliminado correctamente' });
     });
 });
 

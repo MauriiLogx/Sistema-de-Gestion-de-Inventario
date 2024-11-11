@@ -10,129 +10,129 @@ const MarcaDispositivosScreen = () => {
     const [searchText, setSearchText] = useState(''); // Estado para la barra de búsqueda
     const [filteredMarcas, setFilteredMarcas] = useState([]); // Estado para las marcas filtradas
 
-    // Construir el endpoint usando API_URL
-    const marcasEndpoint = `${API_URL}/marcas`;
+// Construir el endpoint usando API_URL
+const marcasEndpoint = `${API_URL}/marcas`;
 
-    // Obtener las marcas de dispositivos desde la API
-    useEffect(() => {
-        fetch(marcasEndpoint)
-            .then((response) => response.json())
-            .then((data) => {
-                setMarcas(data);
-                setFilteredMarcas(data); // Inicializar marcas filtradas
-            })
-            .catch((error) => console.error('Error fetching data:', error));
-    }, []);
+// Obtener las marcas de dispositivos desde la API
+useEffect(() => {
+    fetch(marcasEndpoint)
+        .then((response) => response.json())
+        .then((data) => {
+            setMarcas(data);
+            setFilteredMarcas(data); // Inicializar marcas filtradas
+        })
+        .catch((error) => console.error('Error fetching data:', error));
+}, []);
 
-    // Filtrar marcas en base al texto de búsqueda
-    useEffect(() => {
-        if (searchText === '') {
-            setFilteredMarcas(marcas);
-        } else {
-            const filtered = marcas.filter((marca) =>
-                marca.Nombre.toLowerCase().includes(searchText.toLowerCase())
-            );
-            setFilteredMarcas(filtered);
-        }
-    }, [searchText, marcas]);
-
-    // Manejar la edición o agregar una nueva marca
-    const manejarMarca = () => {
-        const nuevaMarca = {
-            Nombre: nombre,
-        };
-
-        if (!nombre) {
-            Alert.alert('Error', 'El nombre de la marca es obligatorio.');
-            return;
-        }
-
-        if (marcaSeleccionada) {
-            // Editar marca
-            fetch(`${API_URL}/${marcaSeleccionada.ID_Marca_Dispositivo}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevaMarca),
-            })
-                .then((response) => {
-                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                    return response.json();
-                })
-                .then(() => {
-                    const marcasActualizadas = marcas.map((marca) =>
-                        marca.ID_Marca_Dispositivo === marcaSeleccionada.ID_Marca_Dispositivo ? { ...marca, ...nuevaMarca } : marca
-                    );
-                    setMarcas(marcasActualizadas);
-                    cerrarModal();
-                })
-                .catch((error) => {
-                    console.error('Error al editar marca:', error);
-                    Alert.alert('Error', 'No se pudo editar la marca.');
-                });
-        } else {
-            // Agregar nueva marca
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevaMarca),
-            })
-                .then((response) => {
-                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                    return response.json();
-                })
-                .then((data) => {
-                    console.log('Respuesta del servidor al agregar marca:', data);
-
-                    if (data && data.ID_Marca_Dispositivo) {
-                        const nuevaMarcaConID = {
-                            ID_Marca_Dispositivo: data.ID_Marca_Dispositivo,
-                            Nombre: data.Nombre,
-                        };
-                        setMarcas([...marcas, nuevaMarcaConID]);
-                        cerrarModal();
-                    } else {
-                        throw new Error('La respuesta no contiene un ID válido');
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error al agregar marca:', error);
-                    Alert.alert('Error', 'No se pudo agregar la marca.');
-                });
-        }
-    };
-
-    const editarMarca = (marca) => {
-        setMarcaSeleccionada(marca);
-        setNombre(marca.Nombre);
-        setModalVisible(true);
-    };
-
-    const eliminarMarca = (id) => {
-        Alert.alert(
-            'Eliminar Marca',
-            '¿Estás seguro de que deseas eliminar esta marca?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Eliminar',
-                    onPress: () => {
-                        fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-                            .then((response) => {
-                                if (!response.ok) throw new Error('Error al eliminar la marca');
-                                setMarcas(marcas.filter((marca) => marca.ID_Marca_Dispositivo !== id));
-                            })
-                            .catch((error) => {
-                                console.error('Error al eliminar marca:', error);
-                                Alert.alert('Error', 'No se pudo eliminar la marca.');
-                            });
-                    },
-                },
-            ]
+// Filtrar marcas en base al texto de búsqueda
+useEffect(() => {
+    if (searchText === '') {
+        setFilteredMarcas(marcas);
+    } else {
+        const filtered = marcas.filter((marca) =>
+            marca.Nombre.toLowerCase().includes(searchText.toLowerCase())
         );
+        setFilteredMarcas(filtered);
+    }
+}, [searchText, marcas]);
+
+// Manejar la edición o agregar una nueva marca
+const manejarMarca = () => {
+    const nuevaMarca = {
+        Nombre: nombre,
     };
+
+    if (!nombre) {
+        Alert.alert('Error', 'El nombre de la marca es obligatorio.');
+        return;
+    }
+
+    if (marcaSeleccionada) {
+        // Editar marca
+        fetch(`${marcasEndpoint}/${marcaSeleccionada.ID_Marca_Dispositivo}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevaMarca),
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                return response.json();
+            })
+            .then(() => {
+                const marcasActualizadas = marcas.map((marca) =>
+                    marca.ID_Marca_Dispositivo === marcaSeleccionada.ID_Marca_Dispositivo ? { ...marca, ...nuevaMarca } : marca
+                );
+                setMarcas(marcasActualizadas);
+                cerrarModal();
+            })
+            .catch((error) => {
+                console.error('Error al editar marca:', error);
+                Alert.alert('Error', 'No se pudo editar la marca.');
+            });
+    } else {
+        // Agregar nueva marca
+        fetch(marcasEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevaMarca),
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                return response.json();
+            })
+            .then((data) => {
+                console.log('Respuesta del servidor al agregar marca:', data);
+
+                if (data && data.ID_Marca_Dispositivo) {
+                    const nuevaMarcaConID = {
+                        ID_Marca_Dispositivo: data.ID_Marca_Dispositivo,
+                        Nombre: data.Nombre,
+                    };
+                    setMarcas([...marcas, nuevaMarcaConID]);
+                    cerrarModal();
+                } else {
+                    throw new Error('La respuesta no contiene un ID válido');
+                }
+            })
+            .catch((error) => {
+                console.error('Error al agregar marca:', error);
+                Alert.alert('Error', 'No se pudo agregar la marca.');
+            });
+    }
+};
+
+const editarMarca = (marca) => {
+    setMarcaSeleccionada(marca);
+    setNombre(marca.Nombre);
+    setModalVisible(true);
+};
+
+const eliminarMarca = (id) => {
+    Alert.alert(
+        'Eliminar Marca',
+        '¿Estás seguro de que deseas eliminar esta marca?',
+        [
+            {
+                text: 'Cancelar',
+                style: 'cancel',
+            },
+            {
+                text: 'Eliminar',
+                onPress: () => {
+                    fetch(`${marcasEndpoint}/${id}`, { method: 'DELETE' })
+                        .then((response) => {
+                            if (!response.ok) throw new Error('Error al eliminar la marca');
+                            setMarcas(marcas.filter((marca) => marca.ID_Marca_Dispositivo !== id));
+                        })
+                        .catch((error) => {
+                            console.error('Error al eliminar marca:', error);
+                            Alert.alert('Error', 'No se pudo eliminar la marca.');
+                        });
+                },
+            },
+        ]
+    );
+};
 
     const cerrarModal = () => {
         setNombre('');
@@ -202,6 +202,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
+        backgroundColor: '#fff',
     },
     title: {
         fontSize: 20,
@@ -211,16 +212,18 @@ const styles = StyleSheet.create({
     searchBar: {
         height: 40,
         borderColor: '#ccc',
-        borderRadius: 5,
         borderWidth: 1,
-        paddingLeft: 8,
+        borderRadius: 5,
+        paddingHorizontal: 10,
         marginBottom: 10,
     },
     tableHeader: {
         flexDirection: 'row',
-        backgroundColor: '#f4f4f4',
+        backgroundColor: '#f2f2f2',
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
         paddingVertical: 10,
-        paddingHorizontal: 5,
     },
     headerTextNombre: {
         flex: 1,
@@ -235,10 +238,9 @@ const styles = StyleSheet.create({
     },    
     tableRow: {
         flexDirection: 'row',
-        paddingVertical: 10,
-        paddingHorizontal: 5,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
+        paddingVertical: 10,
     },
     cellText: {
         flex: 1,
@@ -248,36 +250,43 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     editButton: {
-        backgroundColor: 'blue',
-        padding: 5,
-        marginRight: 5,
-    },
-    editButtonText: {
-        color: 'white',
+        backgroundColor: '#b326f7',
+        padding: 10,
+        borderRadius: 5,
     },
     deleteButton: {
-        backgroundColor: 'red',
-        padding: 5,
+        backgroundColor: '#f44336',
+        padding: 10,
+        borderRadius: 5,
+    },
+    editButtonText: {
+        color: '#fff',
     },
     deleteButtonText: {
-        color: 'white',
+        color: '#fff',
     },
     modalView: {
-        backgroundColor: 'white',
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: '#b0b0b0',
         padding: 20,
         margin: 20,
-        borderRadius: 10,
+        borderRadius: 20,
     },
     modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
+        fontSize: 20,
+        marginBottom: 20,
+        textAlign: 'center',
     },
     input: {
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        height: 40,
+        width: '80%',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
         marginBottom: 10,
-        padding: 5,
+        backgroundColor: '#fff',
     },
 });
 
