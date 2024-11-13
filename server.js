@@ -3,6 +3,9 @@ const express = require('express'); // Framework para crear aplicaciones web
 const cors = require('cors'); // Middleware para habilitar CORS
 const mysql = require('mysql2'); // Biblioteca para conectarse a MySQL
 const bodyParser = require('body-parser'); // Middleware para parsear cuerpos de solicitudes HTTP
+const xlsx = require('xlsx');
+const fs = require('fs');
+const path = require('path')
 const port = 4000; // Definición del puerto en el que se ejecutará el servidor
 const util = require('util');
 
@@ -782,6 +785,63 @@ app.delete('/api/mantenimientos/:id', (req, res) => {
     });
 });
 
+// ------------------- Ruta para la pantalla de Reporte ----------------------
+
+//Función para obtener los datos del reporte
+async function getReporteData() {
+    const queryStr = `
+        SELECT 
+            d.numero_serie AS 'Número de Serie',
+            td.nombre AS 'Tipo de Dispositivo',
+            md.nombre AS 'Marca del Dispositivo',
+            d.modelo AS 'Modelo del Dispositivo',
+            d.sistema_operativo AS 'Sistema Operativo',
+            u.nombre AS 'Usuario Asignado',
+            un.nombre AS 'Unidad',
+            d.estado AS 'Estado',
+            d.fecha_recepcion AS 'Fecha de Recepción',
+            d.fecha_baja AS 'Fecha de Baja',
+            (SELECT MAX(m.Fecha_Finalizacion) FROM Mantenimiento m WHERE m.Dispositivo_ID = d.ID_Dispositivo) AS 'Última Fecha de Mantenimiento'
+        FROM 
+            Dispositivo d
+        JOIN 
+            Tipo_Dispositivo td ON d.tipo_dispositivo_id = td.ID_Tipo_Dispositivo
+        JOIN 
+            Marca_Dispositivo md ON d.marca_dispositivo_id = md.ID_Marca_Dispositivo
+        JOIN 
+            Usuario u ON d.usuario_id = u.ID_Usuario
+        JOIN 
+            Unidad un ON u.unidad_id = un.ID_Unidad;
+    `;
+    
+    const rows = await query(queryStr); // Ejecuta la consulta y obtiene los datos
+    return rows; // Devuelve los datos en formato JSON
+}
+
+// Ruta para generar y descargar el reporte en Excel
+app.get('/api/generar-reporte', async (req, res) => {
+    try {
+        const data = await getReporteData(); // Obtener datos del reporte
+
+        // Crear hoja de cálculo con los datos
+        const worksheet = xlsx.utils.json_to_sheet(data);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Reporte de Inventario');
+
+        // Guardar el archivo Excel temporalmente
+        const filePath = path.join(__dirname, 'reporte_inventario.xlsx');
+        xlsx.writeFile(workbook, filePath);
+
+        // Enviar el archivo al cliente para descargar
+        res.download(filePath, 'reporte_inventario.xlsx', (err) => {
+            if (err) throw err;
+            fs.unlinkSync(filePath); // Elimina el archivo temporal después de descargar
+        });
+    } catch (error) {
+        console.error('Error generando el reporte:', error);
+        res.status(500).send('Error generando el reporte');
+    }
+});
 
 // ------------------- Iniciar el servidor -------------------
 app.listen(port, () => {
