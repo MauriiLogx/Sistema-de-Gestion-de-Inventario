@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateInput from './DateInput';
 import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 
@@ -69,7 +69,7 @@ const DispositivosScreen = () => {
         try {
             const response = await fetch(usuariosEndpoint);
             const data = await response.json();
-            console.log('Usuarios data:', data); // Verificar la estructura aquí
+            console.log('Usuarios data:', data); 
             setUsuarios(data);
         } catch (error) {
             console.error('Error fetching usuarios:', error);
@@ -341,54 +341,30 @@ const cargarDatosDispositivo = (numeroSerie) => {
                         <Picker.Item label="Inactivo" value="Inactivo" />
                     </Picker>
     
-            {/* Selector de Fecha de Recepción */}
-            <Button title="Seleccionar Fecha de Recepción" onPress={() => setShowRecepcionPicker(true)} />
-            {showRecepcionPicker && (
-                <DateTimePicker
-                    value={fechaRecepcion}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                        setShowRecepcionPicker(false);
-                        if (selectedDate) {
-                            setFechaRecepcion(selectedDate);
-                        }
-                    }}
-                />
-            )}
-            <Text>Fecha de Recepción: {fechaRecepcion.toLocaleDateString()}</Text>
+{/* Selector de Fecha de Recepción */}
+<Text>Seleccionar Fecha de Recepción:</Text>
+<DateInput date={fechaRecepcion} setDate={setFechaRecepcion} />
+<Text>Fecha de Recepción: {fechaRecepcion.toLocaleDateString()}</Text>
 
-            {/* Selector de Estado */}
-            <Text>Estado:</Text>
-            <TextInput
-                value={estado}
-                onChangeText={setEstado}
-                placeholder="Estado (Activo/Inactivo)"
-            />
+{/* Selector de Estado */}
+<Text>Estado:</Text>
+<TextInput
+    value={estado}
+    onChangeText={setEstado}
+    placeholder="Estado (Activo/Inactivo)"
+/>
 
-            {/* Selector de Fecha de Baja solo si el dispositivo está inactivo */}
-            {estado?.toLowerCase() !== 'activo' && (
-            <>
-                <Button title="Seleccionar Fecha de Baja" onPress={() => setShowBajaPicker(true)} />
-                {showBajaPicker && (
-                    <DateTimePicker
-                        value={fechaBaja || new Date()} // Usa la fecha actual si fechaBaja es null
-                        mode="date"
-                        display="default"
-                        onChange={(event, selectedDate) => {
-                            setShowBajaPicker(false);
-                            if (selectedDate) {
-                            setFechaBaja(selectedDate);
-                        }
-                    }}
-                />
-            )}
-            <Text>Fecha de Baja: {fechaBaja ? fechaBaja.toLocaleDateString() : 'No seleccionada'}</Text>
-        </>
-    )}
-    
-                    <Button title="Guardar Dispositivo" onPress={manejarDispositivo} />
-                    <Button title="Cerrar" onPress={cerrarModal} />
+{/* Selector de Fecha de Baja solo si el dispositivo está inactivo */}
+{estado?.toLowerCase() !== 'activo' && (
+<>
+    <Text>Seleccionar Fecha de Baja:</Text>
+    <DateInput date={fechaBaja || new Date()} setDate={setFechaBaja} />
+    <Text>Fecha de Baja: {fechaBaja ? fechaBaja.toLocaleDateString() : 'No seleccionada'}</Text>
+</>
+)}
+
+<Button title="Guardar Dispositivo" onPress={manejarDispositivo} />
+<Button title="Cerrar" onPress={cerrarModal} />
 
 
                     </ScrollView>

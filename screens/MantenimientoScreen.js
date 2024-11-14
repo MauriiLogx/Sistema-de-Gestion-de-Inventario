@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateInput from './DateInput';
 import { API_URL } from '@env'; 
 
 const MantenimientoScreen = () => {
@@ -131,10 +131,9 @@ const fetchDispositivos = async () => {
             return;
         }
     
-        // Configuración de la solicitud de creación o edición
         const metodo = mantenimientoSeleccionado ? 'PUT' : 'POST';
-        const url = `${API_URL}/mantenimientos`;
-    
+        const url = `${API_URL}/mantenimientos${mantenimientoSeleccionado ? `/${mantenimientoSeleccionado.ID_Mantenimiento}` : ''}`;
+        
         fetch(url, {
             method: metodo,
             headers: { 'Content-Type': 'application/json' },
@@ -350,37 +349,15 @@ const fetchDispositivos = async () => {
                     value={dispositivo.Numero_Serie} // Usa Numero_Serie en el valor
                 />
             ))}
-    </Picker>
-</View>
+        </Picker>
+    </View>
 
-                    <Button title="Seleccionar Fecha de Ingreso" onPress={() => setShowIngresoPicker(true)} />
-                    {showIngresoPicker && (
-                        <DateTimePicker
-                            value={fechaIngreso}
-                            mode="date"
-                            display="default"
-                            onChange={(event, selectedDate) => {
-                                setShowIngresoPicker(false);
-                                if (selectedDate) setFechaIngreso(selectedDate);
-                            }}
-                        />
-                    )}
-                    <Text>Fecha de Ingreso: {fechaIngreso.toLocaleDateString()}</Text>
+            <DateInput date={fechaIngreso} setDate={setFechaIngreso} />
+            <Text>Fecha de Ingreso: {fechaIngreso.toLocaleDateString()}</Text>
 
-                    {estado.toLowerCase() === 'completada' && (
-                <>
-                    <Button title="Seleccionar Fecha de Finalización" onPress={() => setShowFinalizacionPicker(true)} />
-                    {showFinalizacionPicker && (
-                    <DateTimePicker
-                        value={fechaFinalizacion || new Date()}
-                        mode="date"
-                        display="default"
-                        onChange={(event, selectedDate) => {
-                            setShowFinalizacionPicker(false);
-                            if (selectedDate) setFechaFinalizacion(selectedDate);
-                        }}
-                    />
-                )}
+                {estado.toLowerCase() === 'completada' && (
+            <>
+                <DateInput date={fechaFinalizacion || new Date()} setDate={setFechaFinalizacion} />
                 <Text>Fecha de Finalización: {fechaFinalizacion ? fechaFinalizacion.toLocaleDateString() : 'No seleccionada'}</Text>
             </>
         )}

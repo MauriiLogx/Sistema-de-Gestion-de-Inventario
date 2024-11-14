@@ -715,8 +715,18 @@ app.put('/api/mantenimientos/:id', (req, res) => {
     const { id } = req.params;
     const { Prioridad, Estado, Encargado_ID, Dispositivo_ID, Fecha_Ingreso, Fecha_Finalizacion, Comentarios } = req.body;
 
+    // Verificación de campos obligatorios
     if (!Prioridad || !Estado || !Encargado_ID || !Dispositivo_ID || !Fecha_Ingreso || !Comentarios) {
         return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    }
+
+    // Asegurarse de que Encargado_ID y Dispositivo_ID sean numéricos
+    const encargadoID = parseInt(Encargado_ID, 10);
+    const dispositivoID = parseInt(Dispositivo_ID, 10);
+
+    // Validar si la conversión fue exitosa (en caso de que el valor no sea numérico)
+    if (isNaN(encargadoID) || isNaN(dispositivoID)) {
+        return res.status(400).json({ message: 'Encargado_ID o Dispositivo_ID no son válidos' });
     }
 
     const sql = `
@@ -725,18 +735,22 @@ app.put('/api/mantenimientos/:id', (req, res) => {
         WHERE ID_Mantenimiento = ?
     `;
 
-    db.query(sql, [Prioridad, Estado, Fecha_Ingreso, Fecha_Finalizacion || null, Encargado_ID, Dispositivo_ID, Comentarios || null, id], (err, result) => {
-        if (err) {
-            console.error('Error al actualizar el mantenimiento:', err);
-            return res.status(500).json({ message: 'Error al editar el mantenimiento' });
-        }
+    db.query(
+        sql,
+        [Prioridad, Estado, encargadoID, dispositivoID, Fecha_Ingreso, Fecha_Finalizacion || null, Comentarios || null, id],
+        (err, result) => {
+            if (err) {
+                console.error('Error al actualizar el mantenimiento:', err);
+                return res.status(500).json({ message: 'Error al editar el mantenimiento' });
+            }
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Mantenimiento no encontrado' });
-        }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Mantenimiento no encontrado' });
+            }
 
-        res.json({ message: 'Mantenimiento actualizado correctamente' });
-    });
+            res.json({ message: 'Mantenimiento actualizado correctamente' });
+        }
+    );
 });
 
 // Ruta para obtener los datos de un mantenimiento específico por ID
