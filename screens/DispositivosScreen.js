@@ -132,7 +132,7 @@ const url = dispositivoSeleccionado
     ? `${API_URL}/dispositivos/${dispositivoSeleccionado.Numero_Serie}` 
     : `${API_URL}/dispositivos`;
 
-    console.log("Datos a enviar:", nuevoDispositivo); // Para depuración
+    console.log("Datos a enviar:", nuevoDispositivo); 
 
     fetch(url, {
         method: metodo,

@@ -66,7 +66,7 @@ const fetchUsuarios = async () => {
     try {
         const response = await fetch(usuariosEndpoint);
         const data = await response.json();
-        console.log("Primer usuario cargado:", data[0]); // Muestra la estructura del primer usuario cargado
+        console.log("Primer usuario cargado:", data[0]); 
         setUsuarios(data);
     } catch (error) {
         console.error('Error fetching usuarios:', error);
@@ -78,7 +78,7 @@ const fetchDispositivos = async () => {
     try {
         const response = await fetch(dispositivosEndpoint);
         const data = await response.json();
-        console.log("Primer dispositivo cargado:", data[0]); // Muestra la estructura del primer dispositivo cargado
+        console.log("Primer dispositivo cargado:", data[0]); 
         setDispositivos(data);
     } catch (error) {
         console.error('Error fetching dispositivos:', error);
@@ -91,49 +91,53 @@ const fetchDispositivos = async () => {
         console.log("Estado:", estado);
         console.log("Fecha de Ingreso:", fechaIngreso);
         console.log("Fecha de Finalización:", fechaFinalizacion);
-        console.log("Encargado seleccionado (RUN):", encargadoID);
-        console.log("Dispositivo seleccionado (Número de Serie):", dispositivoID);
-        console.log("Comentarios:", comentarios);
+        console.log("Encargado ID seleccionado (antes de convertir):", encargadoID);
+        console.log("Dispositivo ID seleccionado (antes de convertir):", dispositivoID);
     
-        // Encuentra el ID correspondiente en usuarios y dispositivos
-        const encargado = usuarios.find(usuario => usuario.RUN === encargadoID);
-        const dispositivo = dispositivos.find(d => d.Numero_Serie === dispositivoID);
+        // Asegurar que los IDs sean numéricos
+        const encargadoIDNum = Number(encargadoID);
+        const dispositivoIDNum = Number(dispositivoID);
     
-        // Si no se encuentran el encargado o el dispositivo, lanza una alerta y termina la ejecución
-        if (!encargado || !dispositivo) {
-            console.error('Encargado o dispositivo no válidos:', { encargado, dispositivo });
-            Alert.alert('Error', 'Encargado o dispositivo no válidos.');
+        console.log("Encargado ID seleccionado (convertido):", encargadoIDNum);
+        console.log("Dispositivo ID seleccionado (convertido):", dispositivoIDNum);
+    
+        // Encuentra el encargado y el dispositivo en las listas usando los IDs convertidos
+        const encargado = usuarios.find((usuario) => usuario.ID_Usuario === encargadoIDNum);
+        const dispositivo = dispositivos.find((dispositivo) => dispositivo.ID_Dispositivo === dispositivoIDNum);
+    
+        console.log('Encargado encontrado:', encargado);
+        console.log('Dispositivo encontrado:', dispositivo);
+    
+        // Manejo de errores en la búsqueda
+        if (!encargado) {
+            console.error("Encargado no encontrado. ID seleccionado:", encargadoIDNum);
+            Alert.alert("Error", "No se encontró el encargado seleccionado.");
+            return;
+        }
+        if (!dispositivo) {
+            console.error("Dispositivo no encontrado. ID seleccionado:", dispositivoIDNum);
+            Alert.alert("Error", "No se encontró el dispositivo seleccionado.");
             return;
         }
     
-        // Crear el objeto nuevo de mantenimiento con los IDs encontrados
         const nuevoMantenimiento = {
             Prioridad: prioridad || '',
             Estado: estado || '',
             Fecha_Ingreso: fechaIngreso ? fechaIngreso.toISOString().split('T')[0] : '',
-            Fecha_Finalizacion: estado.toLowerCase() === 'completada' && fechaFinalizacion ? fechaFinalizacion.toISOString().split('T')[0] : null,
-            Encargado_ID: encargado.ID_Usuario, // Usa el ID_Usuario del encargado
-            Dispositivo_ID: dispositivo.ID_Dispositivo, // Usa el ID_Dispositivo del dispositivo
+            Fecha_Finalizacion:
+                estado.toLowerCase() === 'completada' && fechaFinalizacion
+                    ? fechaFinalizacion.toISOString().split('T')[0]
+                    : null,
+            Encargado_ID: encargado.ID_Usuario,
+            Dispositivo_ID: dispositivo.ID_Dispositivo,
             Comentarios: comentarios || '',
         };
     
-        // Verificación de campos obligatorios
-        if (
-            !nuevoMantenimiento.Prioridad ||
-            !nuevoMantenimiento.Estado ||
-            !nuevoMantenimiento.Fecha_Ingreso ||
-            !nuevoMantenimiento.Encargado_ID ||
-            !nuevoMantenimiento.Dispositivo_ID ||
-            (nuevoMantenimiento.Estado === 'completada' && !nuevoMantenimiento.Fecha_Finalizacion)
-        ) {
-            console.log("Validación fallida - Campos obligatorios faltantes:", nuevoMantenimiento);
-            Alert.alert('Error', 'Todos los campos son obligatorios.');
-            return;
-        }
+        console.log('Nuevo mantenimiento a guardar:', nuevoMantenimiento);
     
         const metodo = mantenimientoSeleccionado ? 'PUT' : 'POST';
         const url = `${API_URL}/mantenimientos${mantenimientoSeleccionado ? `/${mantenimientoSeleccionado.ID_Mantenimiento}` : ''}`;
-        
+    
         fetch(url, {
             method: metodo,
             headers: { 'Content-Type': 'application/json' },
@@ -166,29 +170,48 @@ const fetchDispositivos = async () => {
         setModalVisible(false);
     };
 
-    const cargarDatosMantenimiento = (id) => {
-        const url = `${mantenimientosEndpoint}/${id}`;
-
-        fetch(url)
-            .then((response) => {
-                if (!response.ok) throw new Error('Error al obtener datos del mantenimiento');
-                return response.json();
-            })
-            .then((data) => {
-                setPrioridad(data.Prioridad || '');
-                setEstado(data.Estado || '');
-                setEncargadoID(data.Encargado_ID || '');
-                setDispositivoID(data.Dispositivo_ID || '');
-                setFechaIngreso(data.Fecha_Ingreso ? new Date(data.Fecha_Ingreso) : new Date());
-                setFechaFinalizacion(data.Fecha_Finalizacion ? new Date(data.Fecha_Finalizacion) : null);
-                setComentarios(data.Comentarios || '');
-                setMantenimientoSeleccionado(data);
-                setModalVisible(true);
-            })
-            .catch((error) => {
-                console.error('Error al cargar datos del mantenimiento:', error);
-                Alert.alert('Error', 'No se pudieron cargar los datos del mantenimiento.');
-            });
+    const cargarDatosMantenimiento = async (id) => {
+        try {
+            const url = `${mantenimientosEndpoint}/${id}`;
+            const response = await fetch(url);
+    
+            if (!response.ok) {
+                throw new Error('Error al obtener datos del mantenimiento');
+            }
+    
+            const data = await response.json();
+    
+            console.log('Datos del mantenimiento:', data);
+    
+            // Asignación de valores
+            setPrioridad(data.Prioridad || '');
+            setEstado(data.Estado || '');
+            setComentarios(data.Comentarios || '');
+    
+            // Manejo de fechas
+            setFechaIngreso(data.Fecha_Ingreso ? new Date(data.Fecha_Ingreso) : new Date());
+            setFechaFinalizacion(data.Fecha_Finalizacion ? new Date(data.Fecha_Finalizacion) : null);
+    
+            // Encontrar usuario encargado y dispositivo en las listas cargadas previamente
+            const encargado = usuarios.find((usuario) => usuario.ID_Usuario === data.Encargado_ID);
+            const dispositivo = dispositivos.find((dispositivo) => dispositivo.ID_Dispositivo === data.Dispositivo_ID);
+    
+            console.log('Encargado encontrado:', encargado);
+            console.log('Dispositivo encontrado:', dispositivo);
+    
+            // Asignar valores de ID a los estados
+            setEncargadoID(encargado ? encargado.ID_Usuario : '');
+            setDispositivoID(dispositivo ? dispositivo.ID_Dispositivo : '');
+    
+            // Guardar el mantenimiento seleccionado
+            setMantenimientoSeleccionado(data);
+    
+            // Mostrar el modal
+            setModalVisible(true);
+        } catch (error) {
+            console.error('Error al cargar datos del mantenimiento:', error);
+            Alert.alert('Error', 'No se pudieron cargar los datos del mantenimiento.');
+        }
     };
 
     const editarMantenimiento = (mantenimiento) => {
@@ -249,8 +272,9 @@ const fetchDispositivos = async () => {
                     key={`delete-${item.ID_Mantenimiento}`}
                     style={styles.deleteButton}
                     onPress={() => eliminarMantenimiento(item.ID_Mantenimiento)}
+                    onClick={() => eliminarMantenimiento(item.ID_Mantenimiento)} // Agregado para compatibilidad con navegador
                 >
-                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -282,9 +306,13 @@ const fetchDispositivos = async () => {
             <Button title="Añadir Mantenimiento" onPress={() => setModalVisible(true)} />
 
             <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={cerrarModal}>
-                <View style={styles.modalView}>
-                    <Text style={styles.modalTitle}>{mantenimientoSeleccionado ? 'Editar Mantenimiento' : 'Añadir Nuevo Mantenimiento'}</Text>
-                    <View style={{ marginBottom: 10 }}>
+    <View style={styles.modalView}>
+        <Text style={styles.modalTitle}>
+            {mantenimientoSeleccionado ? 'Editar Mantenimiento' : 'Añadir Nuevo Mantenimiento'}
+        </Text>
+        <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+            {/* Prioridad */}
+            <View style={{ marginBottom: 10 }}>
                 <Text>Prioridad</Text>
                 <Picker
                     selectedValue={prioridad}
@@ -298,76 +326,95 @@ const fetchDispositivos = async () => {
                 </Picker>
             </View>
 
+            {/* Estado */}
             <View style={{ marginBottom: 10 }}>
-            <Text>Estado</Text>
-            <Picker
-                selectedValue={estado}
-                onValueChange={(itemValue) => setEstado(itemValue)}
-                style={styles.picker}
-            >
-            <Picker.Item label="Seleccione el estado" value="" />
-            <Picker.Item label="En progreso" value="En progreso" />
-            <Picker.Item label="Pendiente" value="Pendiente" />
-            <Picker.Item label="Completada" value="Completada" />
-            </Picker>
-        </View>
+                <Text>Estado</Text>
+                <Picker
+                    selectedValue={estado}
+                    onValueChange={(itemValue) => setEstado(itemValue)}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Seleccione el estado" value="" />
+                    <Picker.Item label="En progreso" value="En progreso" />
+                    <Picker.Item label="Pendiente" value="Pendiente" />
+                    <Picker.Item label="Completada" value="Completada" />
+                </Picker>
+            </View>
 
-        <View style={{ marginBottom: 10 }}>
-    <Text>Encargado</Text>
-    <Picker
-        selectedValue={encargadoID}
-        onValueChange={(itemValue) => setEncargadoID(itemValue)}
-        style={styles.picker}
-    >
-        <Picker.Item label="Seleccionar Usuario" value="" />
-        {usuarios
-            .filter(usuario => usuario.RUN) // Asegura que solo se muestren usuarios con un RUN válido
-            .map((usuario) => (
-                <Picker.Item
-                    key={usuario.RUN} // Usa RUN como clave única
-                    label={usuario.Nombre}
-                    value={usuario.RUN} // Usa RUN en el valor
-                />
-            ))}
-    </Picker>
-</View>
+            {/* Encargado */}
+            <View style={{ marginBottom: 10 }}>
+                <Text>Encargado</Text>
+                <Picker
+                    selectedValue={encargadoID}
+                    onValueChange={(itemValue) => setEncargadoID(itemValue)}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Seleccionar Usuario" value="" />
+                    {usuarios.map((usuario) => (
+                        usuario.ID_Usuario !== undefined ? (
+                            <Picker.Item
+                                key={usuario.ID_Usuario.toString()}
+                                label={usuario.Nombre}
+                                value={usuario.ID_Usuario}
+                            />
+                        ) : null
+                    ))}
+                </Picker>
+            </View>
 
-<View style={{ marginBottom: 10 }}>
-    <Text>Dispositivo</Text>
-    <Picker
-        selectedValue={dispositivoID}
-        onValueChange={(itemValue) => setDispositivoID(itemValue)}
-        style={styles.picker}
-    >
-        <Picker.Item label="Seleccione un dispositivo" value="" />
-        {dispositivos
-            .filter(dispositivo => dispositivo.Numero_Serie) // Asegura que solo se muestren dispositivos con un Número de Serie válido
-            .map((dispositivo, index) => (
-                <Picker.Item
-                    key={dispositivo.Numero_Serie} // Usa Numero_Serie como clave única
-                    label={dispositivo.Numero_Serie} // Muestra el Número de Serie en el label
-                    value={dispositivo.Numero_Serie} // Usa Numero_Serie en el valor
-                />
-            ))}
-        </Picker>
-    </View>
+            {/* Dispositivo */}
+            <View style={{ marginBottom: 10 }}>
+                <Text>Dispositivo</Text>
+                <Picker
+                    selectedValue={dispositivoID}
+                    onValueChange={(itemValue) => setDispositivoID(itemValue)}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Seleccione un dispositivo" value="" />
+                    {dispositivos.map((dispositivo) => (
+                        dispositivo.ID_Dispositivo !== undefined ? (
+                            <Picker.Item
+                                key={dispositivo.ID_Dispositivo.toString()}
+                                label={`${dispositivo.Numero_Serie} - ${dispositivo.Modelo}`}
+                                value={dispositivo.ID_Dispositivo}
+                            />
+                        ) : null
+                    ))}
+                </Picker>
+            </View>
 
+            {/* Fecha de Ingreso */}
+            <Text>Seleccionar Fecha de Ingreso:</Text>
             <DateInput date={fechaIngreso} setDate={setFechaIngreso} />
             <Text>Fecha de Ingreso: {fechaIngreso.toLocaleDateString()}</Text>
 
-                {estado.toLowerCase() === 'completada' && (
-            <>
-                <DateInput date={fechaFinalizacion || new Date()} setDate={setFechaFinalizacion} />
-                <Text>Fecha de Finalización: {fechaFinalizacion ? fechaFinalizacion.toLocaleDateString() : 'No seleccionada'}</Text>
-            </>
-        )}
+            {/* Fecha de Finalización */}
+            {estado.toLowerCase() === 'completada' && (
+                <>
+                    <Text>Seleccionar Fecha de Finalización:</Text>
+                    <DateInput date={fechaFinalizacion || new Date()} setDate={setFechaFinalizacion} />
+                    <Text>
+                        Fecha de Finalización:{' '}
+                        {fechaFinalizacion ? fechaFinalizacion.toLocaleDateString() : 'No seleccionada'}
+                    </Text>
+                </>
+            )}
 
-                    <TextInput style={styles.input} placeholder="Comentarios" value={comentarios} onChangeText={setComentarios} multiline />
+            {/* Comentarios */}
+            <TextInput
+                style={styles.input}
+                placeholder="Comentarios"
+                value={comentarios}
+                onChangeText={setComentarios}
+                multiline
+            />
 
-                    <Button title="Guardar Mantenimiento" onPress={manejarMantenimiento} />
-                    <Button title="Cerrar" onPress={cerrarModal} />
-                </View>
-            </Modal>
+            {/* Botones */}
+            <Button title="Guardar Mantenimiento" onPress={manejarMantenimiento} />
+            <Button title="Cerrar" onPress={cerrarModal} />
+        </ScrollView>
+    </View>
+</Modal>
         </View>
     );
 };

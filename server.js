@@ -79,7 +79,7 @@ app.get('/api/usuarios', (req, res) => {
     });
 });
 
-// Ruta para agregar un nuevo usuario
+// Ruta para agregar un nuevo usaurios
 app.post('/api/usuarios', (req, res) => {
     const { Nombre, Email, RUN, Unidad } = req.body;
 
@@ -720,7 +720,7 @@ app.put('/api/mantenimientos/:id', (req, res) => {
         return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    // Asegurarse de que Encargado_ID y Dispositivo_ID sean numéricos
+    // Asegurarse de que Encargado_ID y Dispositivo_ID Sean numericos
     const encargadoID = parseInt(Encargado_ID, 10);
     const dispositivoID = parseInt(Dispositivo_ID, 10);
 
@@ -861,19 +861,3 @@ app.get('/api/generar-reporte', async (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor corriendo en el puerto ${port}`);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
