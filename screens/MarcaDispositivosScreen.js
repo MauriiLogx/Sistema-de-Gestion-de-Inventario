@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Platform, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 const MarcaDispositivosScreen = () => {
@@ -107,31 +107,43 @@ const editarMarca = (marca) => {
     setModalVisible(true);
 };
 
-const eliminarMarca = (id) => {
-    Alert.alert(
-        'Eliminar Marca',
-        '¿Estás seguro de que deseas eliminar esta marca?',
-        [
-            {
-                text: 'Cancelar',
-                style: 'cancel',
-            },
-            {
-                text: 'Eliminar',
-                onPress: () => {
-                    fetch(`${marcasEndpoint}/${id}`, { method: 'DELETE' })
-                        .then((response) => {
-                            if (!response.ok) throw new Error('Error al eliminar la marca');
-                            setMarcas(marcas.filter((marca) => marca.ID_Marca_Dispositivo !== id));
-                        })
-                        .catch((error) => {
-                            console.error('Error al eliminar marca:', error);
-                            Alert.alert('Error', 'No se pudo eliminar la marca.');
-                        });
+const eliminarMarca = (id, nombreMarca) => {
+    if (Platform.OS === 'web') {
+        const confirmar = window.confirm(`¿Está seguro de que desea eliminar la marca "${nombreMarca}"?`);
+        if (confirmar) {
+            fetch(`${marcasEndpoint}/${id}`, { method: 'DELETE' })
+                .then((response) => {
+                    if (!response.ok) throw new Error('Error al eliminar la marca');
+                    setMarcas(marcas.filter((marca) => marca.ID_Marca_Dispositivo !== id));
+                })
+                .catch((error) => {
+                    console.error('Error al eliminar marca:', error);
+                    alert('No se pudo eliminar la marca.');
+                });
+        }
+    } else {
+        Alert.alert(
+            'Eliminar Marca',
+            `¿Está seguro de que desea eliminar la marca "${nombreMarca}"?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    onPress: () => {
+                        fetch(`${marcasEndpoint}/${id}`, { method: 'DELETE' })
+                            .then((response) => {
+                                if (!response.ok) throw new Error('Error al eliminar la marca');
+                                setMarcas(marcas.filter((marca) => marca.ID_Marca_Dispositivo !== id));
+                            })
+                            .catch((error) => {
+                                console.error('Error al eliminar marca:', error);
+                                Alert.alert('Error', 'No se pudo eliminar la marca.');
+                            });
+                    },
                 },
-            },
-        ]
-    );
+            ]
+        );
+    }
 };
 
     const cerrarModal = () => {
@@ -154,8 +166,11 @@ const eliminarMarca = (id) => {
                 <TouchableOpacity style={styles.editButton} onPress={() => editarMarca(item)}>
                     <Text style={styles.editButtonText}>Editar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarMarca(item.ID_Marca_Dispositivo)}>
-                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                <TouchableOpacity 
+                    style={styles.deleteButton} 
+                    onPress={() => eliminarMarca(item.ID_Marca_Dispositivo, item.Nombre)}
+                >
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
             </View>
         </View>

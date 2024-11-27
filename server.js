@@ -801,7 +801,7 @@ app.delete('/api/mantenimientos/:id', (req, res) => {
 
 // ------------------- Ruta para la pantalla de Reporte ----------------------
 
-//Función para obtener los datos del reporte
+// Función para obtener los datos del reporte
 async function getReporteData() {
     const queryStr = `
         SELECT 
@@ -831,6 +831,17 @@ async function getReporteData() {
     const rows = await query(queryStr); // Ejecuta la consulta y obtiene los datos
     return rows; // Devuelve los datos en formato JSON
 }
+
+// Ruta para obtener los datos del reporte en formato JSON (sin descargar Excel)
+app.get('/api/reporte-datos', async (req, res) => {
+    try {
+        const data = await getReporteData(); // Obtener los datos del reporte
+        res.json(data); // Enviar los datos al cliente en formato JSON
+    } catch (error) {
+        console.error('Error al obtener los datos del reporte:', error);
+        res.status(500).send('Error al obtener los datos del reporte');
+    }
+});
 
 // Ruta para generar y descargar el reporte en Excel
 app.get('/api/generar-reporte', async (req, res) => {

@@ -1,6 +1,6 @@
 // Ya documentado
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Platform, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { API_URL } from '@env';
 
@@ -114,31 +114,43 @@ const UsuariosScreen = () => {
         setModalVisible(true);
     };
 
-    const eliminarUsuario = (run) => {
-        Alert.alert(
-            'Eliminar Usuario',
-            '¿Estás seguro de que deseas eliminar este usuario?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Eliminar',
-                    onPress: () => {
-                        fetch(`${usuariosEndpoint}/${run}`, { method: 'DELETE' }) 
-                            .then((response) => {
-                                if (!response.ok) throw new Error('Error al eliminar el usuario');
-                                setUsuarios(usuarios.filter((usuario) => usuario.RUN !== run));
-                            })
-                            .catch((error) => {
-                                console.error('Error al eliminar usuario:', error);
-                                Alert.alert('Error', 'No se pudo eliminar el usuario.');
-                            });
+    const eliminarUsuario = (run, nombreUsuario) => {
+        if (Platform.OS === 'web') {
+            const confirmar = window.confirm(`¿Está seguro de que desea eliminar al usuario "${nombreUsuario}"?`);
+            if (confirmar) {
+                fetch(`${usuariosEndpoint}/${run}`, { method: 'DELETE' })
+                    .then((response) => {
+                        if (!response.ok) throw new Error('Error al eliminar el usuario');
+                        setUsuarios(usuarios.filter((usuario) => usuario.RUN !== run));
+                    })
+                    .catch((error) => {
+                        console.error('Error al eliminar usuario:', error);
+                        alert('No se pudo eliminar el usuario.');
+                    });
+            }
+        } else {
+            Alert.alert(
+                'Eliminar Usuario',
+                `¿Está seguro de que desea eliminar al usuario "${nombreUsuario}"?`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Eliminar',
+                        onPress: () => {
+                            fetch(`${usuariosEndpoint}/${run}`, { method: 'DELETE' })
+                                .then((response) => {
+                                    if (!response.ok) throw new Error('Error al eliminar el usuario');
+                                    setUsuarios(usuarios.filter((usuario) => usuario.RUN !== run));
+                                })
+                                .catch((error) => {
+                                    console.error('Error al eliminar usuario:', error);
+                                    Alert.alert('Error', 'No se pudo eliminar el usuario.');
+                                });
+                        },
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     };
 
     const cerrarModal = () => {
@@ -170,8 +182,11 @@ const UsuariosScreen = () => {
                 <TouchableOpacity style={styles.editButton} onPress={() => editarUsuario(item)}>
                     <Text style={styles.editButtonText}>Editar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarUsuario(item.RUN)}>
-                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                <TouchableOpacity 
+                    style={styles.deleteButton} 
+                    onPress={() => eliminarUsuario(item.RUN, item.Nombre)}
+                >
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
             </View>
         </View>

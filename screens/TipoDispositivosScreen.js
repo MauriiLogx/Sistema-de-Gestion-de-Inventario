@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Platform, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 const TipoDispositivoScreen = () => {
@@ -104,31 +104,43 @@ const editarTipo = (tipo) => {
     setModalVisible(true);
 };
 
-const eliminarTipo = (id) => {
-    Alert.alert(
-        'Eliminar Tipo de Dispositivo',
-        '¿Estás seguro de que deseas eliminar este tipo de dispositivo?',
-        [
-            {
-                text: 'Cancelar',
-                style: 'cancel',
-            },
-            {
-                text: 'Eliminar',
-                onPress: () => {
-                    fetch(`${tiposEndpoint}/${id}`, { method: 'DELETE' })
-                        .then((response) => {
-                            if (!response.ok) throw new Error('Error al eliminar el tipo de dispositivo');
-                            setTipos(tipos.filter((tipo) => tipo.ID_Tipo_Dispositivo !== id));
-                        })
-                        .catch((error) => {
-                            console.error('Error al eliminar tipo de dispositivo:', error);
-                            Alert.alert('Error', 'No se pudo eliminar el tipo de dispositivo.');
-                        });
+const eliminarTipo = (id, nombreTipo) => {
+    if (Platform.OS === 'web') {
+        const confirmar = window.confirm(`¿Está seguro de que desea eliminar el tipo de dispositivo "${nombreTipo}"?`);
+        if (confirmar) {
+            fetch(`${tiposEndpoint}/${id}`, { method: 'DELETE' })
+                .then((response) => {
+                    if (!response.ok) throw new Error('Error al eliminar el tipo de dispositivo');
+                    setTipos(tipos.filter((tipo) => tipo.ID_Tipo_Dispositivo !== id));
+                })
+                .catch((error) => {
+                    console.error('Error al eliminar tipo de dispositivo:', error);
+                    alert('No se pudo eliminar el tipo de dispositivo.');
+                });
+        }
+    } else {
+        Alert.alert(
+            'Eliminar Tipo de Dispositivo',
+            `¿Está seguro de que desea eliminar el tipo de dispositivo "${nombreTipo}"?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    onPress: () => {
+                        fetch(`${tiposEndpoint}/${id}`, { method: 'DELETE' })
+                            .then((response) => {
+                                if (!response.ok) throw new Error('Error al eliminar el tipo de dispositivo');
+                                setTipos(tipos.filter((tipo) => tipo.ID_Tipo_Dispositivo !== id));
+                            })
+                            .catch((error) => {
+                                console.error('Error al eliminar tipo de dispositivo:', error);
+                                Alert.alert('Error', 'No se pudo eliminar el tipo de dispositivo.');
+                            });
+                    },
                 },
-            },
-        ]
-    );
+            ]
+        );
+    }
 };
 
     const cerrarModal = () => {
@@ -151,8 +163,11 @@ const eliminarTipo = (id) => {
                 <TouchableOpacity style={styles.editButton} onPress={() => editarTipo(item)}>
                     <Text style={styles.editButtonText}>Editar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarTipo(item.ID_Tipo_Dispositivo)}>
-                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                <TouchableOpacity 
+                    style={styles.deleteButton} 
+                    onPress={() => eliminarTipo(item.ID_Tipo_Dispositivo, item.Nombre)}
+                >
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
             </View>
         </View>

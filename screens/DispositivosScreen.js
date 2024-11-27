@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Platform, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateInput from './DateInput';
 import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
@@ -205,30 +205,46 @@ const cargarDatosDispositivo = (numeroSerie) => {
         cargarDatosDispositivo(dispositivo.Numero_Serie);
     };
     
-    const eliminarDispositivo = (numeroSerie) => {
-        Alert.alert(
-            'Confirmar Eliminación',
-            '¿Estás seguro de que deseas eliminar este dispositivo?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: () => {
-                        fetch(`${dispositivosEndpoint}/${numeroSerie}`, { method: 'DELETE' })
-                            .then((response) => {
-                                if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                                return response.json();
-                            })
-                            .then(() => fetchDispositivos())
-                            .catch((error) => {
-                                console.error('Error al eliminar dispositivo:', error);
-                                Alert.alert('Error', 'No se pudo eliminar el dispositivo.');
-                            });
+    const eliminarDispositivo = (numeroSerie, modelo) => {
+        if (Platform.OS === 'web') {
+            const confirmar = window.confirm(`¿Está seguro de que desea eliminar el dispositivo "${modelo}" con número de serie "${numeroSerie}"?`);
+            if (confirmar) {
+                fetch(`${dispositivosEndpoint}/${numeroSerie}`, { method: 'DELETE' })
+                    .then((response) => {
+                        if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                        return response.json();
+                    })
+                    .then(() => fetchDispositivos()) // Actualiza la lista después de eliminar
+                    .catch((error) => {
+                        console.error('Error al eliminar dispositivo:', error);
+                        alert('No se pudo eliminar el dispositivo.');
+                    });
+            }
+        } else {
+            Alert.alert(
+                'Confirmar Eliminación',
+                `¿Está seguro de que desea eliminar el dispositivo "${modelo}" con número de serie "${numeroSerie}"?`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Eliminar',
+                        style: 'destructive',
+                        onPress: () => {
+                            fetch(`${dispositivosEndpoint}/${numeroSerie}`, { method: 'DELETE' })
+                                .then((response) => {
+                                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                                    return response.json();
+                                })
+                                .then(() => fetchDispositivos()) // Actualiza la lista después de eliminar
+                                .catch((error) => {
+                                    console.error('Error al eliminar dispositivo:', error);
+                                    Alert.alert('Error', 'No se pudo eliminar el dispositivo.');
+                                });
+                        },
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     };
 
     const renderHeader = () => (
@@ -258,9 +274,9 @@ const cargarDatosDispositivo = (numeroSerie) => {
                 <TouchableOpacity
                     key={`delete-${item.Numero_Serie}`}
                     style={styles.deleteButton}
-                    onPress={() => eliminarDispositivo(item.Numero_Serie)}
+                    onPress={() => eliminarDispositivo(item.Numero_Serie, item.Modelo)}
                 >
-                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
             </View>
         </View>

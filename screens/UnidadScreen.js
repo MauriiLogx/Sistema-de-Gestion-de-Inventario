@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Platform, StyleSheet, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { API_URL } from '@env'; // Importar API_URL desde el archivo .env
 
 const UnidadScreen = () => {
@@ -101,31 +101,43 @@ const editarUnidad = (unidad) => {
     setModalVisible(true);
 };
 
-const eliminarUnidad = (id) => {
-    Alert.alert(
-        'Eliminar Unidad',
-        '¿Estás seguro de que deseas eliminar esta unidad?',
-        [
-            {
-                text: 'Cancelar',
-                style: 'cancel',
-            },
-            {
-                text: 'Eliminar',
-                onPress: () => {
-                    fetch(`${unidadesEndpoint}/${id}`, { method: 'DELETE' })
-                        .then((response) => {
-                            if (!response.ok) throw new Error('Error al eliminar la unidad');
-                            setUnidades(unidades.filter((unidad) => unidad.ID_Unidad !== id));
-                        })
-                        .catch((error) => {
-                            console.error('Error al eliminar unidad:', error);
-                            Alert.alert('Error', 'No se pudo eliminar la unidad.');
-                        });
+const eliminarUnidad = (id, nombreUnidad) => {
+    if (Platform.OS === 'web') {
+        const confirmar = window.confirm(`¿Está seguro que desea eliminar la unidad "${nombreUnidad}"?`);
+        if (confirmar) {
+            fetch(`${unidadesEndpoint}/${id}`, { method: 'DELETE' })
+                .then((response) => {
+                    if (!response.ok) throw new Error('Error al eliminar la unidad');
+                    setUnidades(unidades.filter((unidad) => unidad.ID_Unidad !== id));
+                })
+                .catch((error) => {
+                    console.error('Error al eliminar unidad:', error);
+                    alert('No se pudo eliminar la unidad.');
+                });
+        }
+    } else {
+        Alert.alert(
+            'Eliminar Unidad',
+            `¿Está seguro que desea eliminar la unidad "${nombreUnidad}"?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    onPress: () => {
+                        fetch(`${unidadesEndpoint}/${id}`, { method: 'DELETE' })
+                            .then((response) => {
+                                if (!response.ok) throw new Error('Error al eliminar la unidad');
+                                setUnidades(unidades.filter((unidad) => unidad.ID_Unidad !== id));
+                            })
+                            .catch((error) => {
+                                console.error('Error al eliminar unidad:', error);
+                                Alert.alert('Error', 'No se pudo eliminar la unidad.');
+                            });
+                    },
                 },
-            },
-        ]
-    );
+            ]
+        );
+    }
 };
 
     const cerrarModal = () => {
@@ -148,8 +160,11 @@ const eliminarUnidad = (id) => {
                 <TouchableOpacity style={styles.editButton} onPress={() => editarUnidad(item)}>
                     <Text style={styles.editButtonText}>Editar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarUnidad(item.ID_Unidad)}>
-                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                <TouchableOpacity 
+                    style={styles.deleteButton} 
+                    onPress={() => eliminarUnidad(item.ID_Unidad, item.Nombre)}
+                >
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
             </View>
         </View>

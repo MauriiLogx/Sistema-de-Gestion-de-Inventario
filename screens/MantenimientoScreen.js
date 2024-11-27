@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Platform, ScrollView, TextInput, Button, Modal, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateInput from './DateInput';
 import { API_URL } from '@env'; 
@@ -218,30 +218,46 @@ const fetchDispositivos = async () => {
         cargarDatosMantenimiento(mantenimiento.ID_Mantenimiento);
     };
 
-    const eliminarMantenimiento = (id) => {
-        Alert.alert(
-            'Confirmar Eliminación',
-            '¿Estás seguro de que deseas eliminar este mantenimiento?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: () => {
-                        fetch(`${mantenimientosEndpoint}/${id}`, { method: 'DELETE' })
-                            .then((response) => {
-                                if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                                return response.json();
-                            })
-                            .then(() => fetchMantenimientos())
-                            .catch((error) => {
-                                console.error('Error al eliminar mantenimiento:', error);
-                                Alert.alert('Error', 'No se pudo eliminar el mantenimiento.');
-                            });
+    const eliminarMantenimiento = (id, descripcion) => {
+        if (Platform.OS === 'web') {
+            const confirmar = window.confirm(`¿Está seguro de que desea eliminar el mantenimiento "${descripcion}"?`);
+            if (confirmar) {
+                fetch(`${mantenimientosEndpoint}/${id}`, { method: 'DELETE' })
+                    .then((response) => {
+                        if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                        return response.json();
+                    })
+                    .then(() => fetchMantenimientos()) // Actualiza la lista después de eliminar
+                    .catch((error) => {
+                        console.error('Error al eliminar mantenimiento:', error);
+                        alert('No se pudo eliminar el mantenimiento.');
+                    });
+            }
+        } else {
+            Alert.alert(
+                'Confirmar Eliminación',
+                `¿Está seguro de que desea eliminar el mantenimiento "${descripcion}"?`,
+                [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                        text: 'Eliminar',
+                        style: 'destructive',
+                        onPress: () => {
+                            fetch(`${mantenimientosEndpoint}/${id}`, { method: 'DELETE' })
+                                .then((response) => {
+                                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                                    return response.json();
+                                })
+                                .then(() => fetchMantenimientos()) // Actualiza la lista después de eliminar
+                                .catch((error) => {
+                                    console.error('Error al eliminar mantenimiento:', error);
+                                    Alert.alert('Error', 'No se pudo eliminar el mantenimiento.');
+                                });
+                        },
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     };
 
     const renderHeader = () => (
@@ -271,8 +287,7 @@ const fetchDispositivos = async () => {
                 <TouchableOpacity
                     key={`delete-${item.ID_Mantenimiento}`}
                     style={styles.deleteButton}
-                    onPress={() => eliminarMantenimiento(item.ID_Mantenimiento)}
-                    onClick={() => eliminarMantenimiento(item.ID_Mantenimiento)} // Agregado para compatibilidad con navegador
+                    onPress={() => eliminarMantenimiento(item.ID_Mantenimiento, item.Encargado)}
                 >
                 <Text style={styles.deleteButtonText}>Eliminar</Text>
                 </TouchableOpacity>
