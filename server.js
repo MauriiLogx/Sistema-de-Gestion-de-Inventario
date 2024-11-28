@@ -4,6 +4,7 @@ const cors = require('cors'); // Middleware para habilitar CORS
 const mysql = require('mysql2'); // Biblioteca para conectarse a MySQL
 const bodyParser = require('body-parser'); // Middleware para parsear cuerpos de solicitudes HTTP
 const xlsx = require('xlsx');
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path')
 const port = 4000; // Definición del puerto en el que se ejecutará el servidor
@@ -15,10 +16,10 @@ app.use(bodyParser.json()); // Middleware para parsear JSON en el cuerpo de las 
 
 // Configuración de la conexión a la base de datos MySQL
 const db = mysql.createConnection({
-    host: 'localhost', // Dirección del servidor de base de datos
-    user: 'root', // Usuario de la base de datos
-    password: 'm7470', // Contraseña del usuario
-    database: 'gestion_inventarios', // Nombre de la base de datos
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
 });
 
 // Promisificar la función db.query
