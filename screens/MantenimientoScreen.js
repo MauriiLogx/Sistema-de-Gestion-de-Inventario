@@ -468,11 +468,10 @@ const styles = StyleSheet.create({
         minWidth: '100%',
     },
     headerText: {
-        flex: 1,
-        textAlign: 'left', // Alineación centrada para los encabezados
+        flex: 2, // Ajusta el ancho proporcional para cada columna
+        textAlign: 'left',
         fontWeight: 'bold',
-        width: 100, // Asegúrate de que el ancho coincida con las celdas
-        minWidth: 100,
+        paddingHorizontal: 5, // Agrega un pequeño margen interno
     },
     tableRow: {
         flexDirection: 'row',
@@ -482,15 +481,17 @@ const styles = StyleSheet.create({
         minWidth: '100%',
     },
     cellText: {
-        flex: 1,
-        textAlign: 'left', // Alineación centrada para las celdas
-        width: 100, // Debe coincidir con el ancho de headerText
+        flex: 2, // Debe coincidir con el valor de flex en headerText
+        textAlign: 'left',
+        paddingHorizontal: 5, // Agrega un pequeño margen interno
+        overflow: 'hidden', // Evita que el contenido desborde
     },
     cellActions: {
+        flex: 2,
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        minWidth: 150,
+        justifyContent: 'left', // Cambiado para centrar los botones
+        alignItems: 'left',
+        gap: 10, // Agrega un pequeño espacio entre los botones (React Native 0.71+)
     },
     editButton: {
         backgroundColor: '#b326f7',
