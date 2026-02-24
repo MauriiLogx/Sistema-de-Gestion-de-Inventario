@@ -202,7 +202,7 @@ const UsuariosScreen = () => {
                 onChangeText={setSearchTerm}
             />
             <ScrollView horizontal={true} contentContainerStyle={{ flexGrow: 1 }}>
-            <View style={{ width: '100%' }}>
+                <View style={{ width: '100%' }}>
                     {renderHeader()}
                     {filteredUsuarios.length > 0 ? (
                         <FlatList
@@ -267,7 +267,7 @@ const UsuariosScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flex: 2,
         padding: 16,
         backgroundColor: '#fff',
     },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     tableContainer: {
-        flex: 1,
+        flex: 2,
         minWidth: '100%', // Hace que la tabla se expanda por todo el ancho disponible
     },
     tableHeader: {
@@ -299,10 +299,10 @@ const styles = StyleSheet.create({
         minWidth: '100%',
     },
     headerText: {
-        flex: 2,
+        flex: 2, // Ajusta el ancho proporcional para cada columna
         textAlign: 'left',
         fontWeight: 'bold',
-        width: 100, // Asegúrate de que el ancho coincida con las celdas
+        paddingHorizontal: 5, // Agrega un pequeño margen interno
     },
     tableRow: {
         flexDirection: 'row',
@@ -312,15 +312,17 @@ const styles = StyleSheet.create({
         minWidth: '100%',
     },
     cellText: {
-        flex: 2,
-        textAlign: 'left', // Alineación centrada para las celdas
-        width: 100, // Debe coincidir con el ancho de headerText
+        flex: 2, // Debe coincidir con el valor de flex en headerText
+        textAlign: 'left',
+        paddingHorizontal: 5, // Agrega un pequeño margen interno
+        overflow: 'hidden', // Evita que el contenido desborde
     },
     cellActions: {
-        flex: 1,
+        flex: 2,
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
+        justifyContent: 'left', // Cambiado para centrar los botones
+        alignItems: 'left',
+        gap: 10, // Agrega un pequeño espacio entre los botones (React Native 0.71+)
     },
     editButton: {
         backgroundColor: '#b326f7',
