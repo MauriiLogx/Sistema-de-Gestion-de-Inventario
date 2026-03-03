@@ -7,7 +7,7 @@ const xlsx = require('xlsx');
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path')
-const port = 4000; // Definición del puerto en el que se ejecutará el servidor
+const port = process.env.PORT || 4000; // Definición del puerto en el que se ejecutará el servidor
 const util = require('util');
 
 const app = express(); // Crea una instancia de la aplicación Express
