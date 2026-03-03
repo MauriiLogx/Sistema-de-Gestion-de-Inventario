@@ -27,12 +27,13 @@ const db = mysql.createPool({
 const query = util.promisify(db.query).bind(db);
 
 // Conexión a la base de datos
-db.connect((err) => {
+db.getConnection((err, connection) => {
     if (err) {
-        console.error('Error conectando a la base de datos:', err); // Manejo de errores en la conexion
-        return;
+        console.error('Error conectando a la base de datos:', err);
+    } else {
+        console.log('Conectado a la base de datos MySQL');
+        connection.release();
     }
-    console.log('Conectado a la base de datos MySQL'); // Mensaje de éxito en la conexión
 });
 
 // Ruta para obtener estadísticas de dispositivos y usuarios
